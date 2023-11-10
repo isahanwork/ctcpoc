@@ -2,7 +2,7 @@
 	"name": "1_spark_create_gold_trip_data_green_agg",
 	"properties": {
 		"folder": {
-			"name": "test"
+			"name": "course/test"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,

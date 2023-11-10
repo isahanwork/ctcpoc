@@ -6,7 +6,7 @@
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "demo"
+			"name": "course/demo"
 		},
 		"annotations": [],
 		"type": "Parquet",
