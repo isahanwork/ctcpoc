@@ -2,7 +2,7 @@
 	"name": "ongoing_calendar_dim",
 	"properties": {
 		"folder": {
-			"name": "adv/edw/pipelines/edw/calendar_dim"
+			"name": "adv/edw/pipelines/calendar_dim"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
