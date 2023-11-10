@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "synapse-course-isws"
+		},
+		"ls_adv_raw_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapse-course-isws-ondemand.sql.azuresynapse.net,1433;Initial Catalog=adv_raw"
+		},
+		"ls_serverless_sql_pool_db_nyc_taxi_ldw_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapse-course-isws-ondemand.sql.azuresynapse.net,1433;Initial Catalog=nyc_taxi_ldw"
+		},
+		"synapse-course-isws-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapse-course-isws.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"ls_synapsecoursedl_properties_typeProperties_url": {
+			"value": "https://issynapsecoursedl.dfs.core.windows.net/"
+		},
+		"synapse-course-isws-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://issynapsecoursedl.dfs.core.windows.net"
+		}
+	}
+}
