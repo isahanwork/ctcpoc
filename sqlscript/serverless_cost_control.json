@@ -2,7 +2,7 @@
 	"name": "serverless_cost_control",
 	"properties": {
 		"folder": {
-			"name": "utils"
+			"name": "course/utils"
 		},
 		"content": {
 			"query": "select * from sys.configurations where name like 'Data Processed %';\n\nselect * from sys.dm_external_data_processed;",

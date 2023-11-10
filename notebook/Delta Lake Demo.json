@@ -2,7 +2,7 @@
 	"name": "Delta Lake Demo",
 	"properties": {
 		"folder": {
-			"name": "test"
+			"name": "course"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
