@@ -2,7 +2,7 @@
 	"name": "Create EDW Lake Database",
 	"properties": {
 		"folder": {
-			"name": "avd_edw/dll"
+			"name": "adv/edw/dll"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,

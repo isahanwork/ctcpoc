@@ -2,7 +2,7 @@
 	"name": "ongoing_sales_fct",
 	"properties": {
 		"folder": {
-			"name": "avd_edw/pipelines/edw/sales_fct"
+			"name": "adv/edw/pipelines/edw/sales_fct"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
