@@ -1,0 +1,20 @@
+{
+	"name": "1_create_silver_sales",
+	"properties": {
+		"folder": {
+			"name": "adv/raw/silver/sales"
+		},
+		"content": {
+			"query": "IF OBJECT_ID('silver.sales') IS NOT NULL\n    DROP EXTERNAL TABLE silver.sales\nGO\n\n-- Create table\nCREATE EXTERNAL TABLE silver.sales\n(\n\t[pos_transaction_id] [int],\n\t[product_id] [int],\n\t[item_price] [numeric](8, 2),\n\t[item_qty] [int],\n\t[item_cost] [numeric](8, 2),\n\t[total_sales_amt] [numeric](8, 2),\n\t[total_cost_amt] [numeric](8, 2),\n\t[transaction_dt] [int]\n)\nWITH (LOCATION = 'sales/**', DATA_SOURCE = [adw_raw], FILE_FORMAT = [ParquetFormat])\nGO\n\n-- Create view\nDROP VIEW IF EXISTS silver.vw_sales\nGO\n\nCREATE VIEW silver.vw_sales\nAS\nSELECT\n    \n    result.*, result.filepath(1) AS batch_dt\nFROM\n    OPENROWSET(\n        BULK 'sales/batch_dt=*/*.parquet',\n        DATA_SOURCE = 'adw_raw',\n        FORMAT = 'PARQUET'\n    )\n  WITH (\n\t[pos_transaction_id] [int],\n\t[product_id] [int],\n\t[item_price] [numeric](8, 2),\n\t[item_qty] [int],\n\t[item_cost] [numeric](8, 2),\n\t[total_sales_amt] [numeric](8, 2),\n\t[total_cost_amt] [numeric](8, 2),\n\t[transaction_dt] [int]\n  ) AS [result]\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "adv_raw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

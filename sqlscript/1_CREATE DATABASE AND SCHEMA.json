@@ -1,0 +1,20 @@
+{
+	"name": "1_CREATE DATABASE AND SCHEMA",
+	"properties": {
+		"folder": {
+			"name": "adv/dll"
+		},
+		"content": {
+			"query": "USE master\nGO\n\n--drop DATABASE if EXISTS adv_raw;\n\n\nCREATE DATABASE adv_raw\nGO\n\nALTER DATABASE adv_raw COLLATE Latin1_General_100_BIN2_UTF8\nGO\n\nUSE adv_raw\nGO\n\nCREATE SCHEMA bronze\nGO\n\nCREATE SCHEMA silver\nGO\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "adv_raw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

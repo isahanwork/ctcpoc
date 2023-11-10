@@ -1,0 +1,96 @@
+{
+	"name": "recreate product_dim table",
+	"properties": {
+		"folder": {
+			"name": "avd_edw/pipelines/edw/product_dim/ddl"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "coursepool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "a502e4ed-0f0e-485c-8474-e0083c76baac"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/e8466fdf-9bf5-4a95-b888-76e57bd31ac5/resourceGroups/synapse-course-rg/providers/Microsoft.Synapse/workspaces/synapse-course-isws/bigDataPools/coursepool",
+				"name": "coursepool",
+				"type": "Spark",
+				"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.3",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 5
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE adv_edw;\r\n",
+					"\r\n",
+					"DROP table if exists product_dim;\r\n",
+					"\r\n",
+					"CREATE TABLE IF NOT EXISTS product_dim (\r\n",
+					"\tsku_num VARCHAR(100) not null,\r\n",
+					"    effective_date date,\r\n",
+					"    end_date date,\r\n",
+					"\tproduct_nm VARCHAR(200),\r\n",
+					"\tcategory_nm VARCHAR(100),\r\n",
+					"\tsub_category_nm VARCHAR(100),\r\n",
+					"\titem_price_amt decimal(8,2),\r\n",
+					"\tstandard_cost_amt decimal(8,2),\r\n",
+					"\tcolor_nm VARCHAR(100),\r\n",
+					"\tload_ts timestamp,\r\n",
+					"\traw_batch_dt int,\r\n",
+					"  current_record_ind int\r\n",
+					"\r\n",
+					")\r\n",
+					"USING DELTA\r\n",
+					""
+				],
+				"execution_count": 3
+			}
+		]
+	}
+}

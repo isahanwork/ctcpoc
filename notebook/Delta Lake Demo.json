@@ -1,0 +1,325 @@
+{
+	"name": "Delta Lake Demo",
+	"properties": {
+		"folder": {
+			"name": "test"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "coursepool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "fec30e85-c519-49d6-a13d-00fb190535d8"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/e8466fdf-9bf5-4a95-b888-76e57bd31ac5/resourceGroups/synapse-course-rg/providers/Microsoft.Synapse/workspaces/synapse-course-isws/bigDataPools/coursepool",
+				"name": "coursepool",
+				"type": "Spark",
+				"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.3",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 5
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"# Define column headers\r\n",
+					"columns = [\"Employee\",\"Salary\"]\r\n",
+					"\r\n",
+					"# Define data for original dataframe\r\n",
+					"empOriginal = [(\"Employee_1\",50000),(\"Employee_2\",55000)]\r\n",
+					"\r\n",
+					"# Define data for updates dataframe\r\n",
+					"empUpdates = [(\"Employee_1\",50000),(\"Employee_2\",60000),(\"Employee_3\",55000)]\r\n",
+					"\r\n",
+					"# Create dataframe with orignial employee data\r\n",
+					"dfOriginal = spark.createDataFrame(data = empOriginal,schema = columns)\r\n",
+					"\r\n",
+					"# Create dataframe with updated employee data\r\n",
+					"dfUpdates = spark.createDataFrame(data = empUpdates,schema = columns)\r\n",
+					"\r\n",
+					"# Display dfOriginal\r\n",
+					"dfOriginal.show()\r\n",
+					"\r\n",
+					"# Display dfUpdates\r\n",
+					"dfUpdates.show()\r\n",
+					""
+				],
+				"execution_count": 25
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Create temp views of both the dfOriginal and dfUpdates dataframes \r\n",
+					"# so that we can easily query them with Spark SQL later\r\n",
+					"\r\n",
+					"#dfOriginal\r\n",
+					"dfOriginal.createOrReplaceTempView('Employee_Original')\r\n",
+					"\r\n",
+					"#dfUpdates\r\n",
+					"dfUpdates.createOrReplaceTempView('Employee_Updates')"
+				],
+				"execution_count": 26
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"-- Create Delta Lake table, define schema and location\r\n",
+					"CREATE TABLE IF NOT EXISTS DELTA_Employees (\r\n",
+					"  Employee STRING NOT NULL,\r\n",
+					"  Salary INT NOT NULL,\r\n",
+					"  BeginDate DATE NOT NULL,\r\n",
+					"  EndDate DATE NOT NULL,\r\n",
+					"  CurrentRecord INT NOT NULL \r\n",
+					")\r\n",
+					"USING DELTA\r\n",
+					"-- specify data lake folder location\r\n",
+					"LOCATION '/Delta_Demo/Employees/' "
+				],
+				"execution_count": 27
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"-- Merge statement to handle upsert of dfOrginal dataset into DELTA_Employees table\r\n",
+					"MERGE INTO delta_employees t\r\n",
+					"USING (\r\n",
+					"    SELECT emp.Employee AS MergeKey, emp.*\r\n",
+					"    FROM Employee_Original AS emp\r\n",
+					"\r\n",
+					"    UNION ALL\r\n",
+					"\r\n",
+					"    SELECT NULL AS MergeKey, emp.*\r\n",
+					"    FROM Employee_Original AS emp\r\n",
+					"    JOIN delta_employees AS de ON emp.Employee = de.Employee\r\n",
+					"    WHERE de.CurrentRecord = 1 AND emp.Salary <> de.Salary\r\n",
+					") s\r\n",
+					"ON t.Employee = s.MergeKey\r\n",
+					"WHEN MATCHED AND t.CurrentRecord = 1 AND t.Salary <> s.Salary THEN\r\n",
+					"  UPDATE SET t.CurrentRecord = 0, t.EndDate = (CURRENT_DATE)\r\n",
+					"WHEN NOT MATCHED THEN\r\n",
+					"  INSERT (Employee, Salary, BeginDate, EndDate, CurrentRecord) VALUES (s.Employee, s.Salary, CURRENT_DATE, '2999-12-31',1)\r\n",
+					"\r\n",
+					"\r\n",
+					"   "
+				],
+				"execution_count": 28
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"-- Merge statement to handle upsert of dfUpdates into DELTA_Employees table\r\n",
+					"MERGE INTO delta_employees t\r\n",
+					"USING (\r\n",
+					"    SELECT emp.Employee AS MergeKey, emp.*\r\n",
+					"    FROM Employee_Updates AS emp\r\n",
+					"\r\n",
+					"    UNION ALL\r\n",
+					"\r\n",
+					"    SELECT NULL AS MergeKey, emp.*\r\n",
+					"    FROM Employee_Updates AS emp\r\n",
+					"    JOIN delta_employees AS de ON emp.Employee = de.Employee\r\n",
+					"    WHERE de.CurrentRecord = 1 AND emp.Salary <> de.Salary\r\n",
+					") s\r\n",
+					"ON t.Employee = s.MergeKey\r\n",
+					"WHEN MATCHED AND t.CurrentRecord = 1 AND t.Salary <> s.Salary THEN\r\n",
+					"  UPDATE SET t.CurrentRecord = 0, t.EndDate = (CURRENT_DATE)\r\n",
+					"WHEN NOT MATCHED THEN\r\n",
+					"  INSERT (Employee, Salary, BeginDate, EndDate, CurrentRecord) VALUES (s.Employee, s.Salary, CURRENT_DATE, '2999-12-31',1)"
+				],
+				"execution_count": 29
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"-- Retrieve the version/change history of the Delta table\r\n",
+					"DESCRIBE HISTORY default.DELTA_Employees"
+				],
+				"execution_count": 19
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"\r\n",
+					"# Load a previous version of the DELTA_Employees table into a dataframe\r\n",
+					"df = spark.read.format(\"delta\").option(\"versionAsOf\", 2).load(\"/Delta_Demo/Employees/\")\r\n",
+					"df.show()"
+				],
+				"execution_count": 16
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# A compact will let us write out the contents of our Delta table into a specified number of files.\r\n",
+					"(spark.read\r\n",
+					" .format(\"delta\")\r\n",
+					" .load(\"/Delta_Demo/Employees/\") #delta table folder to read from\r\n",
+					" .repartition(1) #number of files to write\r\n",
+					" .write\r\n",
+					" .option(\"dataChange\", \"false\") #do not change the data\r\n",
+					" .format(\"delta\")\r\n",
+					" .mode(\"overwrite\")\r\n",
+					" .save(\"/Delta_Demo/Employees/\")) #location to write new file(s)"
+				],
+				"execution_count": 18
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"--Vacuum files where table version is older than 10 days \r\n",
+					"VACUUM default.DELTA_Employees RETAIN 240 HOURS"
+				],
+				"execution_count": 23
+			}
+		]
+	}
+}

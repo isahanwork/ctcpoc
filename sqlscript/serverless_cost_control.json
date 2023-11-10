@@ -1,0 +1,20 @@
+{
+	"name": "serverless_cost_control",
+	"properties": {
+		"folder": {
+			"name": "utils"
+		},
+		"content": {
+			"query": "select * from sys.configurations where name like 'Data Processed %';\n\nselect * from sys.dm_external_data_processed;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"name": "1_create_bronze_SALES_view",
+	"properties": {
+		"folder": {
+			"name": "adv/raw/bronze"
+		},
+		"content": {
+			"query": "USE adv_raw\nGO\n\nDROP VIEW IF EXISTS bronze.vw_sales\nGO\n\nCREATE VIEW bronze.vw_sales\nAS\nSELECT SalesOrderLineKey as pos_transaction_id\n     , ProductKey as product_id\n\t , UnitPrice as item_price\n\t , OrderQuantity as item_qty\n\t , ProductStandardCost as item_cost\n\t , SalesAmount as total_sales_amt\n\t , TotalProductCost as total_cost_amt\n     , UnitPriceDiscountPct as item_price_disc\n     , ExtendedAmount as extended_amt\n     , SalesTerritoryKey as sales_territory_id\n     , OrderDateKey as order_dt\n     , CustomerKey as customer_id\n     , ResellerKey as reseller_id\n   \t , ShipDateKey as transaction_dt\n\t , DueDateKey as batch_dt\nFROM\n    OPENROWSET(\n        BULK 'Sales/Sales.csv',\n        DATA_SOURCE = 'adw_sources',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) \n    WITH (\n        SalesAmount\tdecimal(8,2) 1,\n        TotalProductCost\tdecimal(8,2) 2,\n        ProductStandardCost\tdecimal(8,2) 3,\n        UnitPriceDiscountPct\tdecimal(8,2) 4,\n        ExtendedAmount\tdecimal(8,2) 5,\n        UnitPrice\tdecimal(8,2) 6,\n        OrderQuantity\tinteger 7,\n        SalesTerritoryKey\tinteger 8,\n        ShipDateKey\tinteger 9,\n        DueDateKey\tinteger 10,\n        OrderDateKey\tinteger 11,\n        ProductKey\tinteger 12,\n        CustomerKey\tinteger 13,\n        ResellerKey\tinteger 14,\n        SalesOrderLineKey\tinteger 15\n    )\n    AS r",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "adv_raw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"name": "2_create_bronze_CALENDAR_view",
+	"properties": {
+		"folder": {
+			"name": "adv/raw/bronze"
+		},
+		"content": {
+			"query": "USE adv_raw\nGO\n\nDROP VIEW IF EXISTS bronze.vw_calendar\nGO\n\nCREATE VIEW bronze.vw_calendar\nAS\nSELECT DateKey as date_id\n     , MonthKey as month_id\n     , Month as fiscal_month\n     , FiscalQuarter as fiscal_quarter\n     , FiscalYear as fiscal_year\nFROM\n    OPENROWSET(\n        BULK 'Date/Date.csv',\n        DATA_SOURCE = 'adw_sources',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) \n    WITH (\n        DateKey\tinteger 1,\n--        Date\tVARCHAR(10) 2 ,\n        FiscalYear\tVARCHAR(10) 3 ,\n        FiscalQuarter\tVARCHAR(10) 4,\n        Month\tVARCHAR(10) 5,\n--        FullDate\tVARCHAR(10) 6,\n        MonthKey\tVARCHAR(10) 7\n\n\n    )\nAS r",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "adv_raw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

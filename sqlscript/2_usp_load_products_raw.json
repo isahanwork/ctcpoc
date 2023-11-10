@@ -1,0 +1,20 @@
+{
+	"name": "2_usp_load_products_raw",
+	"properties": {
+		"folder": {
+			"name": "adv/raw/silver/products"
+		},
+		"content": {
+			"query": "USE adv_raw\nGO\n\nCREATE OR ALTER PROCEDURE silver.usp_load_products_raw\n@esp_dt VARCHAR(8)\nAS\nBEGIN\n\n    DECLARE @create_sql_stmt NVARCHAR(MAX),\n            @drop_sql_stmt   NVARCHAR(MAX);\n\n    SET @create_sql_stmt = \n        'CREATE EXTERNAL TABLE silver.products_' + @esp_dt  + \n        ' WITH\n            (\n                DATA_SOURCE = adw_raw,\n                LOCATION = ''products/batch_dt=' + @esp_dt + ''',\n                FILE_FORMAT = ParquetFormat\n            )\n        AS\n        select p.sku_num\n             , p.product_nm\n             , p.category_nm\n             , p.sub_category_nm\n             , s.item_price as item_price_amt\n             , p.standard_cost_amt  \n             , p.color_nm, p.model_nm\n             , s.batch_dt\n          from bronze.vw_products p join silver.vw_sales s \n            on p.product_id  = s.product_id\n         where s.batch_dt = ''' + @esp_dt + '''\n        ';    \n\n    print(@create_sql_stmt)\n\n    EXEC sp_executesql @create_sql_stmt;\n\n    SET @drop_sql_stmt = \n        'DROP EXTERNAL TABLE silver.products_' + @esp_dt ;\n\n    print(@drop_sql_stmt)\n    EXEC sp_executesql @drop_sql_stmt;\n\nEND;\n\n\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "adv_raw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

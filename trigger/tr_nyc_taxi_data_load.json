@@ -1,0 +1,25 @@
+{
+	"name": "tr_nyc_taxi_data_load",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_execute_all_pipelines",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 5,
+				"startTime": "2023-10-26T18:35:00",
+				"endTime": "2023-10-26T18:45:00",
+				"timeZone": "FLE Standard Time"
+			}
+		}
+	}
+}

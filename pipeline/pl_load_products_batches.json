@@ -1,0 +1,140 @@
+{
+	"name": "pl_load_products_batches",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Dates",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_adv_raw",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "select date_id as esp_dt\n  from bronze.vw_calendar\n where date_id between  @{pipeline().parameters.dt_satart}\n   and  @{pipeline().parameters.dt_end}",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "ForEachDates",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Dates",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Dates').output.resultSets[0].Rows",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Delete Products Batch Folder",
+							"type": "Delete",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "ds_adv",
+									"type": "DatasetReference",
+									"parameters": {
+										"p_folder_path": {
+											"value": "raw/products/batch_dt=@{item().esp_dt}",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							}
+						},
+						{
+							"name": "Load Produtcs Partition",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Delete Products Batch Folder",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[silver].[usp_load_products_raw]",
+								"storedProcedureParameters": {
+									"esp_dt": {
+										"value": {
+											"value": "@{item().esp_dt}",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "ls_adv_raw",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"dt_satart": {
+				"type": "string",
+				"defaultValue": "20170710"
+			},
+			"dt_end": {
+				"type": "string",
+				"defaultValue": "20200615"
+			}
+		},
+		"folder": {
+			"name": "adv/raw"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-11-06T12:25:10Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

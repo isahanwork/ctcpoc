@@ -1,0 +1,20 @@
+{
+	"name": "1_create_silver_calendar",
+	"properties": {
+		"folder": {
+			"name": "adv/raw/silver/calendar"
+		},
+		"content": {
+			"query": "USE adv_raw\ngo \n\nIF OBJECT_ID('silver.calendar') IS NOT NULL\n    DROP EXTERNAL TABLE silver.calendar\nGO\n\n-- Create table\nCREATE EXTERNAL TABLE silver.calendar\nWITH (LOCATION = 'calendar/', DATA_SOURCE = [adw_raw], FILE_FORMAT = [ParquetFormat])\nAS\n  select cast(date_id as int) as day_id\n\t   , cast(month_id as int) as month_id\n\t   , cast(substring(month_id,1,4) as int)  year_id\n       , fiscal_month as fiscal_month_nm\n       , fiscal_quarter as fiscal_quarter_nm\n       , fiscal_year as fiscal_year_nm\n    from bronze.vw_calendar\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "adv_raw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"name": "3_create_bronze_PRODUCTS_view",
+	"properties": {
+		"folder": {
+			"name": "adv/raw/bronze"
+		},
+		"content": {
+			"query": "USE adv_raw\nGO\n\nDROP VIEW IF EXISTS bronze.vw_products\nGO\n\nCREATE VIEW bronze.vw_products\nAS\nSELECT ProductKey as product_id\n     , SKU as sku_num\n     , Product as product_nm\n     , Category as category_nm\n     , Subcategory as sub_category_nm\n     , ListPrice as list_price_amt\n     , StandardCost as standard_cost_amt\n     , Color as color_nm\n     , Model as model_nm\nFROM\n    OPENROWSET(\n        BULK 'ProductData/ProductData.csv',\n        DATA_SOURCE = 'adw_sources',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) \n    WITH (\n        Category\tVARCHAR(100) 1,\n        Subcategory\tVARCHAR(100) 2,\n        Model\tVARCHAR(200) 3,\n        ListPrice\tdecimal(8,2) 4,\n        Color\tVARCHAR(100) 5, \n        StandardCost\tdecimal(8,2) 6,\n        Product\tVARCHAR(200) 7,\n        SKU\tVARCHAR(100) 8, \n        ProductKey\tinteger 9\n    )\nAS r",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "adv_raw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

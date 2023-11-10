@@ -1,0 +1,20 @@
+{
+	"name": "2_CREATE DATA SOURCES",
+	"properties": {
+		"folder": {
+			"name": "adv/dll"
+		},
+		"content": {
+			"query": "USE adv_raw\nGo\nCREATE EXTERNAL FILE FORMAT ParquetFormat WITH (  FORMAT_TYPE = PARQUET );\nGO\nCREATE EXTERNAL FILE FORMAT DeltaLakeFormat WITH (  FORMAT_TYPE = DELTA );\nGO\n\n--abfss://dventure-works@issynapsecoursedl.dfs.core.windows.net/Source\n--https://issynapsecoursedl.dfs.core.windows.net/adventure-works/Source/Sales/Sales.csv\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'adw_sources')\n    CREATE EXTERNAL DATA SOURCE adw_sources\n    WITH\n    (    LOCATION         = 'https://issynapsecoursedl.dfs.core.windows.net/adventure-works/sources'\n    );\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'adw_raw')\n    CREATE EXTERNAL DATA SOURCE adw_raw\n    WITH\n    (    LOCATION         = 'https://issynapsecoursedl.dfs.core.windows.net/adventure-works/raw'\n    );\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'adw_edw')\n    CREATE EXTERNAL DATA SOURCE adw_edw\n    WITH\n    (    LOCATION         = 'https://issynapsecoursedl.dfs.core.windows.net/adventure-works/edw'\n    );\n\n\nSELECT name, location FROM sys.external_data_sources;\n\n-- DROP EXTERNAL DATA SOURCE adw_raw;\n-- DROP EXTERNAL DATA SOURCE adw_edw;\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "adv_raw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

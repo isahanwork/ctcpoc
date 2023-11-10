@@ -1,0 +1,20 @@
+{
+	"name": "2_usp_load_sales_raw",
+	"properties": {
+		"folder": {
+			"name": "adv/raw/silver/sales"
+		},
+		"content": {
+			"query": "USE adv_raw\nGO\n\nCREATE OR ALTER PROCEDURE silver.usp_load_sales_raw\n@esp_dt VARCHAR(8)\nAS\nBEGIN\n\n    DECLARE @create_sql_stmt NVARCHAR(MAX),\n            @drop_sql_stmt   NVARCHAR(MAX);\n\n    SET @create_sql_stmt = \n        'CREATE EXTERNAL TABLE silver.sales_' + @esp_dt  + \n        ' WITH\n            (\n                DATA_SOURCE = adw_raw,\n                LOCATION = ''sales/batch_dt=' + @esp_dt + ''',\n                FILE_FORMAT = ParquetFormat\n            )\n        AS\n        SELECT pos_transaction_id\n            , product_id\n            , item_price\n            , item_qty\n            , item_cost\n            , total_sales_amt\n            , total_cost_amt\n            , transaction_dt\n        FROM bronze.vw_sales\n        WHERE batch_dt = ''' + @esp_dt + '''\n        ';    \n\n    print(@create_sql_stmt)\n\n    EXEC sp_executesql @create_sql_stmt;\n\n    SET @drop_sql_stmt = \n        'DROP EXTERNAL TABLE silver.sales_' + @esp_dt ;\n\n    print(@drop_sql_stmt)\n    EXEC sp_executesql @drop_sql_stmt;\n\nEND;\n\n\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "adv_raw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

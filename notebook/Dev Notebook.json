@@ -1,0 +1,106 @@
+{
+	"name": "Dev Notebook",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "coursepool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "7fea0270-a206-4a33-9c38-aaf2f49bebfc"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/e8466fdf-9bf5-4a95-b888-76e57bd31ac5/resourceGroups/synapse-course-rg/providers/Microsoft.Synapse/workspaces/synapse-course-isws/bigDataPools/coursepool",
+				"name": "coursepool",
+				"type": "Spark",
+				"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.3",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 5
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"collapsed": false
+				},
+				"source": [
+					"esp_date = 20170710\r\n",
+					"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\"\r\n",
+					"raw_folder_path = f'{base_path}/raw'\r\n",
+					"sys = mssparkutils.notebook\r\n",
+					"\r\n",
+					"try:\r\n",
+					"    raw_df = spark.read.parquet(f\"{raw_folder_path}/products/batch_dt={esp_date}/*.parquet\")\r\n",
+					"except:\r\n",
+					"    sys.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
+					"    \r\n",
+					"raw_df.createOrReplaceTempView('ref_product_raw')\r\n",
+					"raw_df.show()\r\n",
+					""
+				],
+				"execution_count": 62
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE adv_edw;\r\n",
+					"\r\n",
+					"DROP table if exists caledar_dim;"
+				],
+				"execution_count": 1
+			}
+		]
+	}
+}

@@ -1,0 +1,58 @@
+{
+	"name": "pl_daily_load_product_dim",
+	"properties": {
+		"activities": [
+			{
+				"name": "Run Daily Batch Product Dim",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": "ongoing_product_dim",
+						"type": "NotebookReference"
+					},
+					"parameters": {
+						"esp_date": {
+							"value": {
+								"value": "@{pipeline().parameters.esp_date}",
+								"type": "Expression"
+							},
+							"type": "string"
+						}
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "coursepool",
+						"type": "BigDataPoolReference"
+					},
+					"conf": {
+						"spark.dynamicAllocation.enabled": false,
+						"spark.dynamicAllocation.minExecutors": 2,
+						"spark.dynamicAllocation.maxExecutors": 2
+					},
+					"numExecutors": 2
+				}
+			}
+		],
+		"parameters": {
+			"esp_date": {
+				"type": "string",
+				"defaultValue": "99999999"
+			}
+		},
+		"folder": {
+			"name": "adv/edw/product_dim"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-11-06T12:34:04Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

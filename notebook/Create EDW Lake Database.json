@@ -1,0 +1,89 @@
+{
+	"name": "Create EDW Lake Database",
+	"properties": {
+		"folder": {
+			"name": "avd_edw/dll"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "coursepool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "f5a1f65f-d80d-4066-80de-e6b5acbc8f74"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/e8466fdf-9bf5-4a95-b888-76e57bd31ac5/resourceGroups/synapse-course-rg/providers/Microsoft.Synapse/workspaces/synapse-course-isws/bigDataPools/coursepool",
+				"name": "coursepool",
+				"type": "Spark",
+				"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.3",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 5
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "python"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"\r\n",
+					"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\"\r\n",
+					"\r\n",
+					"#spark.sql(\"DROP DATABASE IF EXISTS adv_edw CASCADE\")\r\n",
+					"spark.sql(f\"CREATE DATABASE IF NOT EXISTS adv_edw LOCATION '{base_path}/edw'\")\r\n",
+					""
+				],
+				"execution_count": 3
+			}
+		]
+	}
+}
