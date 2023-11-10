@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "18e4c232-8ebe-4571-95b0-f39b72d83fa8"
+				"spark.autotune.trackingId": "7868088a-3419-49a8-a5f3-f34146cb54ca"
 			}
 		},
 		"metadata": {
@@ -58,7 +58,7 @@
 					"collapsed": false
 				},
 				"source": [
-					"esp_date = 20170710\r\n",
+					"esp_date = 20170711\r\n",
 					"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\"\r\n",
 					"raw_folder_path = f'{base_path}/raw'\r\n",
 					"sys = mssparkutils.notebook\r\n",
