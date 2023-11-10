@@ -2,7 +2,7 @@
 	"name": "recreate sales_fct table",
 	"properties": {
 		"folder": {
-			"name": "adv/edw/pipelines/edw/sales_fct/ddl"
+			"name": "adv/edw/pipelines/sales_fct/ddl"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,

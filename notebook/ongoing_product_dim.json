@@ -2,7 +2,7 @@
 	"name": "ongoing_product_dim",
 	"properties": {
 		"folder": {
-			"name": "adv/edw/pipelines/edw/product_dim"
+			"name": "adv/edw/pipelines/product_dim"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,

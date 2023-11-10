@@ -2,7 +2,7 @@
 	"name": "recreate product_dim table",
 	"properties": {
 		"folder": {
-			"name": "adv/edw/pipelines/edw/product_dim/ddl"
+			"name": "adv/edw/pipelines/product_dim/ddl"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
