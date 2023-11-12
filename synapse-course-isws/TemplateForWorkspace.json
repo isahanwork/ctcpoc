@@ -1442,6 +1442,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "adv"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -1475,6 +1478,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "course"
+				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
@@ -1504,7 +1510,7 @@
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
-					"name": "demo"
+					"name": "course/demo"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -1821,52 +1827,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/1_CREATE DATABASE AND SCHEMA')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/dll"
-				},
-				"content": {
-					"query": "USE master\nGO\n\n--drop DATABASE if EXISTS adv_raw;\n\n\nCREATE DATABASE adv_raw\nGO\n\nALTER DATABASE adv_raw COLLATE Latin1_General_100_BIN2_UTF8\nGO\n\nUSE adv_raw\nGO\n\nCREATE SCHEMA bronze\nGO\n\nCREATE SCHEMA silver\nGO\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "adv_raw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/1_create_bronze_SALES_view')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/raw/bronze"
-				},
-				"content": {
-					"query": "USE adv_raw\nGO\n\nDROP VIEW IF EXISTS bronze.vw_sales\nGO\n\nCREATE VIEW bronze.vw_sales\nAS\nSELECT SalesOrderLineKey as pos_transaction_id\n     , ProductKey as product_id\n\t , UnitPrice as item_price\n\t , OrderQuantity as item_qty\n\t , ProductStandardCost as item_cost\n\t , SalesAmount as total_sales_amt\n\t , TotalProductCost as total_cost_amt\n     , UnitPriceDiscountPct as item_price_disc\n     , ExtendedAmount as extended_amt\n     , SalesTerritoryKey as sales_territory_id\n     , OrderDateKey as order_dt\n     , CustomerKey as customer_id\n     , ResellerKey as reseller_id\n   \t , ShipDateKey as transaction_dt\n\t , DueDateKey as batch_dt\nFROM\n    OPENROWSET(\n        BULK 'Sales/Sales.csv',\n        DATA_SOURCE = 'adw_sources',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) \n    WITH (\n        SalesAmount\tdecimal(8,2) 1,\n        TotalProductCost\tdecimal(8,2) 2,\n        ProductStandardCost\tdecimal(8,2) 3,\n        UnitPriceDiscountPct\tdecimal(8,2) 4,\n        ExtendedAmount\tdecimal(8,2) 5,\n        UnitPrice\tdecimal(8,2) 6,\n        OrderQuantity\tinteger 7,\n        SalesTerritoryKey\tinteger 8,\n        ShipDateKey\tinteger 9,\n        DueDateKey\tinteger 10,\n        OrderDateKey\tinteger 11,\n        ProductKey\tinteger 12,\n        CustomerKey\tinteger 13,\n        ResellerKey\tinteger 14,\n        SalesOrderLineKey\tinteger 15\n    )\n    AS r",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "adv_raw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/1_create_databases')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -1881,75 +1841,6 @@
 					},
 					"currentConnection": {
 						"databaseName": "nyc_taxi_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/1_create_silver_calendar')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/raw/silver/calendar"
-				},
-				"content": {
-					"query": "USE adv_raw\ngo \n\nIF OBJECT_ID('silver.calendar') IS NOT NULL\n    DROP EXTERNAL TABLE silver.calendar\nGO\n\n-- Create table\nCREATE EXTERNAL TABLE silver.calendar\nWITH (LOCATION = 'calendar/', DATA_SOURCE = [adw_raw], FILE_FORMAT = [ParquetFormat])\nAS\n  select cast(date_id as int) as day_id\n\t   , cast(month_id as int) as month_id\n\t   , cast(substring(month_id,1,4) as int)  year_id\n       , fiscal_month as fiscal_month_nm\n       , fiscal_quarter as fiscal_quarter_nm\n       , fiscal_year as fiscal_year_nm\n    from bronze.vw_calendar\n\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "adv_raw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/1_create_silver_products')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/raw/silver/products"
-				},
-				"content": {
-					"query": "IF OBJECT_ID('silver.products') IS NOT NULL\n    DROP EXTERNAL TABLE silver.products\nGO\n\n-- Create table\nCREATE EXTERNAL TABLE silver.products\n(\n\tsku_num VARCHAR(100),\n\tproduct_nm VARCHAR(200),\n\tcategory_nm VARCHAR(100),\n\tsub_category_nm VARCHAR(100),\n\titem_price_amt decimal(8,2),\n\tstandard_cost_amt decimal(8,2),\n\tcolor_nm VARCHAR(100),\n\tmodel_nm VARCHAR(200)\n)\nWITH (LOCATION = 'products/**', DATA_SOURCE = [adw_raw], FILE_FORMAT = [ParquetFormat])\nGO\n\n-- Create view\nDROP VIEW IF EXISTS silver.vw_products\nGO\n\nCREATE VIEW silver.vw_products\nAS\nSELECT\n    \n    result.*, result.filepath(1) AS batch_dt\nFROM\n    OPENROWSET(\n        BULK 'products/batch_dt=*/*.parquet',\n        DATA_SOURCE = 'adw_raw',\n        FORMAT = 'PARQUET'\n    )\n  WITH (\n\tsku_num VARCHAR(100),\n\tproduct_nm VARCHAR(200),\n\tcategory_nm VARCHAR(100),\n\tsub_category_nm VARCHAR(100),\n\titem_price_amt decimal(8,2),\n\tstandard_cost_amt decimal(8,2),\n\tcolor_nm VARCHAR(100),\n\tmodel_nm VARCHAR(200)\n  ) AS [result]\nGO",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "adv_raw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/1_create_silver_sales')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/raw/silver/sales"
-				},
-				"content": {
-					"query": "IF OBJECT_ID('silver.sales') IS NOT NULL\n    DROP EXTERNAL TABLE silver.sales\nGO\n\n-- Create table\nCREATE EXTERNAL TABLE silver.sales\n(\n\t[pos_transaction_id] [int],\n\t[product_id] [int],\n\t[item_price] [numeric](8, 2),\n\t[item_qty] [int],\n\t[item_cost] [numeric](8, 2),\n\t[total_sales_amt] [numeric](8, 2),\n\t[total_cost_amt] [numeric](8, 2),\n\t[transaction_dt] [int]\n)\nWITH (LOCATION = 'sales/**', DATA_SOURCE = [adw_raw], FILE_FORMAT = [ParquetFormat])\nGO\n\n-- Create view\nDROP VIEW IF EXISTS silver.vw_sales\nGO\n\nCREATE VIEW silver.vw_sales\nAS\nSELECT\n    \n    result.*, result.filepath(1) AS batch_dt\nFROM\n    OPENROWSET(\n        BULK 'sales/batch_dt=*/*.parquet',\n        DATA_SOURCE = 'adw_raw',\n        FORMAT = 'PARQUET'\n    )\n  WITH (\n\t[pos_transaction_id] [int],\n\t[product_id] [int],\n\t[item_price] [numeric](8, 2),\n\t[item_qty] [int],\n\t[item_cost] [numeric](8, 2),\n\t[total_sales_amt] [numeric](8, 2),\n\t[total_cost_amt] [numeric](8, 2),\n\t[transaction_dt] [int]\n  ) AS [result]\nGO",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "adv_raw",
 						"poolName": "Built-in"
 					},
 					"resultLimit": 5000
@@ -1996,52 +1887,6 @@
 					},
 					"currentConnection": {
 						"databaseName": "nyc_taxi_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/2_CREATE DATA SOURCES')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/dll"
-				},
-				"content": {
-					"query": "USE adv_raw\nGo\nCREATE EXTERNAL FILE FORMAT ParquetFormat WITH (  FORMAT_TYPE = PARQUET );\nGO\nCREATE EXTERNAL FILE FORMAT DeltaLakeFormat WITH (  FORMAT_TYPE = DELTA );\nGO\n\n--abfss://dventure-works@issynapsecoursedl.dfs.core.windows.net/Source\n--https://issynapsecoursedl.dfs.core.windows.net/adventure-works/Source/Sales/Sales.csv\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'adw_sources')\n    CREATE EXTERNAL DATA SOURCE adw_sources\n    WITH\n    (    LOCATION         = 'https://issynapsecoursedl.dfs.core.windows.net/adventure-works/sources'\n    );\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'adw_raw')\n    CREATE EXTERNAL DATA SOURCE adw_raw\n    WITH\n    (    LOCATION         = 'https://issynapsecoursedl.dfs.core.windows.net/adventure-works/raw'\n    );\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'adw_edw')\n    CREATE EXTERNAL DATA SOURCE adw_edw\n    WITH\n    (    LOCATION         = 'https://issynapsecoursedl.dfs.core.windows.net/adventure-works/edw'\n    );\n\n\nSELECT name, location FROM sys.external_data_sources;\n\n-- DROP EXTERNAL DATA SOURCE adw_raw;\n-- DROP EXTERNAL DATA SOURCE adw_edw;\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "adv_raw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/2_create_bronze_CALENDAR_view')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/raw/bronze"
-				},
-				"content": {
-					"query": "USE adv_raw\nGO\n\nDROP VIEW IF EXISTS bronze.vw_calendar\nGO\n\nCREATE VIEW bronze.vw_calendar\nAS\nSELECT DateKey as date_id\n     , MonthKey as month_id\n     , Month as fiscal_month\n     , FiscalQuarter as fiscal_quarter\n     , FiscalYear as fiscal_year\nFROM\n    OPENROWSET(\n        BULK 'Date/Date.csv',\n        DATA_SOURCE = 'adw_sources',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) \n    WITH (\n        DateKey\tinteger 1,\n--        Date\tVARCHAR(10) 2 ,\n        FiscalYear\tVARCHAR(10) 3 ,\n        FiscalQuarter\tVARCHAR(10) 4,\n        Month\tVARCHAR(10) 5,\n--        FullDate\tVARCHAR(10) 6,\n        MonthKey\tVARCHAR(10) 7\n\n\n    )\nAS r",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "adv_raw",
 						"poolName": "Built-in"
 					},
 					"resultLimit": 5000
@@ -2111,75 +1956,6 @@
 					},
 					"currentConnection": {
 						"databaseName": "nyc_taxi_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/2_usp_load_products_raw')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/raw/silver/products"
-				},
-				"content": {
-					"query": "USE adv_raw\nGO\n\nCREATE OR ALTER PROCEDURE silver.usp_load_products_raw\n@esp_dt VARCHAR(8)\nAS\nBEGIN\n\n    DECLARE @create_sql_stmt NVARCHAR(MAX),\n            @drop_sql_stmt   NVARCHAR(MAX);\n\n    SET @create_sql_stmt = \n        'CREATE EXTERNAL TABLE silver.products_' + @esp_dt  + \n        ' WITH\n            (\n                DATA_SOURCE = adw_raw,\n                LOCATION = ''products/batch_dt=' + @esp_dt + ''',\n                FILE_FORMAT = ParquetFormat\n            )\n        AS\n        select p.sku_num\n             , p.product_nm\n             , p.category_nm\n             , p.sub_category_nm\n             , s.item_price as item_price_amt\n             , p.standard_cost_amt  \n             , p.color_nm, p.model_nm\n             , s.batch_dt\n          from bronze.vw_products p join silver.vw_sales s \n            on p.product_id  = s.product_id\n         where s.batch_dt = ''' + @esp_dt + '''\n        ';    \n\n    print(@create_sql_stmt)\n\n    EXEC sp_executesql @create_sql_stmt;\n\n    SET @drop_sql_stmt = \n        'DROP EXTERNAL TABLE silver.products_' + @esp_dt ;\n\n    print(@drop_sql_stmt)\n    EXEC sp_executesql @drop_sql_stmt;\n\nEND;\n\n\n\n\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "adv_raw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/2_usp_load_sales_raw')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/raw/silver/sales"
-				},
-				"content": {
-					"query": "USE adv_raw\nGO\n\nCREATE OR ALTER PROCEDURE silver.usp_load_sales_raw\n@esp_dt VARCHAR(8)\nAS\nBEGIN\n\n    DECLARE @create_sql_stmt NVARCHAR(MAX),\n            @drop_sql_stmt   NVARCHAR(MAX);\n\n    SET @create_sql_stmt = \n        'CREATE EXTERNAL TABLE silver.sales_' + @esp_dt  + \n        ' WITH\n            (\n                DATA_SOURCE = adw_raw,\n                LOCATION = ''sales/batch_dt=' + @esp_dt + ''',\n                FILE_FORMAT = ParquetFormat\n            )\n        AS\n        SELECT pos_transaction_id\n            , product_id\n            , item_price\n            , item_qty\n            , item_cost\n            , total_sales_amt\n            , total_cost_amt\n            , transaction_dt\n        FROM bronze.vw_sales\n        WHERE batch_dt = ''' + @esp_dt + '''\n        ';    \n\n    print(@create_sql_stmt)\n\n    EXEC sp_executesql @create_sql_stmt;\n\n    SET @drop_sql_stmt = \n        'DROP EXTERNAL TABLE silver.sales_' + @esp_dt ;\n\n    print(@drop_sql_stmt)\n    EXEC sp_executesql @drop_sql_stmt;\n\nEND;\n\n\n\n\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "adv_raw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/3_create_bronze_PRODUCTS_view')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/raw/bronze"
-				},
-				"content": {
-					"query": "USE adv_raw\nGO\n\nDROP VIEW IF EXISTS bronze.vw_products\nGO\n\nCREATE VIEW bronze.vw_products\nAS\nSELECT ProductKey as product_id\n     , SKU as sku_num\n     , Product as product_nm\n     , Category as category_nm\n     , Subcategory as sub_category_nm\n     , ListPrice as list_price_amt\n     , StandardCost as standard_cost_amt\n     , Color as color_nm\n     , Model as model_nm\nFROM\n    OPENROWSET(\n        BULK 'ProductData/ProductData.csv',\n        DATA_SOURCE = 'adw_sources',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) \n    WITH (\n        Category\tVARCHAR(100) 1,\n        Subcategory\tVARCHAR(100) 2,\n        Model\tVARCHAR(200) 3,\n        ListPrice\tdecimal(8,2) 4,\n        Color\tVARCHAR(100) 5, \n        StandardCost\tdecimal(8,2) 6,\n        Product\tVARCHAR(200) 7,\n        SKU\tVARCHAR(100) 8, \n        ProductKey\tinteger 9\n    )\nAS r",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "adv_raw",
 						"poolName": "Built-in"
 					},
 					"resultLimit": 5000
@@ -2580,6 +2356,190 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/CREATE DATA SOURCES')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "adv/dll"
+				},
+				"content": {
+					"query": "USE adv_raw\nGo\nCREATE EXTERNAL FILE FORMAT ParquetFormat WITH (  FORMAT_TYPE = PARQUET );\nGO\nCREATE EXTERNAL FILE FORMAT DeltaLakeFormat WITH (  FORMAT_TYPE = DELTA );\nGO\n\n--abfss://dventure-works@issynapsecoursedl.dfs.core.windows.net/Source\n--https://issynapsecoursedl.dfs.core.windows.net/adventure-works/Source/Sales/Sales.csv\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'adw_sources')\n    CREATE EXTERNAL DATA SOURCE adw_sources\n    WITH\n    (    LOCATION         = 'https://issynapsecoursedl.dfs.core.windows.net/adventure-works/sources'\n    );\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'adw_raw')\n    CREATE EXTERNAL DATA SOURCE adw_raw\n    WITH\n    (    LOCATION         = 'https://issynapsecoursedl.dfs.core.windows.net/adventure-works/raw'\n    );\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'adw_edw')\n    CREATE EXTERNAL DATA SOURCE adw_edw\n    WITH\n    (    LOCATION         = 'https://issynapsecoursedl.dfs.core.windows.net/adventure-works/edw'\n    );\n\n\nSELECT name, location FROM sys.external_data_sources;\n\n-- DROP EXTERNAL DATA SOURCE adw_raw;\n-- DROP EXTERNAL DATA SOURCE adw_edw;\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "adv_raw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/CREATE DATABASE AND SCHEMA')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "adv/dll"
+				},
+				"content": {
+					"query": "USE master\nGO\n\n--drop DATABASE if EXISTS adv_raw;\n\n\nCREATE DATABASE adv_raw\nGO\n\nALTER DATABASE adv_raw COLLATE Latin1_General_100_BIN2_UTF8\nGO\n\nUSE adv_raw\nGO\n\nCREATE SCHEMA bronze\nGO\n\nCREATE SCHEMA silver\nGO\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "adv_raw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/create_bronze_CALENDAR_view')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "adv/raw/bronze"
+				},
+				"content": {
+					"query": "USE adv_raw\nGO\n\nDROP VIEW IF EXISTS bronze.vw_calendar\nGO\n\nCREATE VIEW bronze.vw_calendar\nAS\nSELECT DateKey as date_id\n     , MonthKey as month_id\n     , Month as fiscal_month\n     , FiscalQuarter as fiscal_quarter\n     , FiscalYear as fiscal_year\nFROM\n    OPENROWSET(\n        BULK 'Date/Date.csv',\n        DATA_SOURCE = 'adw_sources',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) \n    WITH (\n        DateKey\tinteger 1,\n--        Date\tVARCHAR(10) 2 ,\n        FiscalYear\tVARCHAR(10) 3 ,\n        FiscalQuarter\tVARCHAR(10) 4,\n        Month\tVARCHAR(10) 5,\n--        FullDate\tVARCHAR(10) 6,\n        MonthKey\tVARCHAR(10) 7\n\n\n    )\nAS r",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "adv_raw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/create_bronze_PRODUCTS_view')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "adv/raw/bronze"
+				},
+				"content": {
+					"query": "USE adv_raw\nGO\n\nDROP VIEW IF EXISTS bronze.vw_products\nGO\n\nCREATE VIEW bronze.vw_products\nAS\nSELECT ProductKey as product_id\n     , SKU as sku_num\n     , Product as product_nm\n     , Category as category_nm\n     , Subcategory as sub_category_nm\n     , ListPrice as list_price_amt\n     , StandardCost as standard_cost_amt\n     , Color as color_nm\n     , Model as model_nm\nFROM\n    OPENROWSET(\n        BULK 'ProductData/ProductData.csv',\n        DATA_SOURCE = 'adw_sources',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) \n    WITH (\n        Category\tVARCHAR(100) 1,\n        Subcategory\tVARCHAR(100) 2,\n        Model\tVARCHAR(200) 3,\n        ListPrice\tdecimal(8,2) 4,\n        Color\tVARCHAR(100) 5, \n        StandardCost\tdecimal(8,2) 6,\n        Product\tVARCHAR(200) 7,\n        SKU\tVARCHAR(100) 8, \n        ProductKey\tinteger 9\n    )\nAS r",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "adv_raw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/create_bronze_SALES_view')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "adv/raw/bronze"
+				},
+				"content": {
+					"query": "USE adv_raw\nGO\n\nDROP VIEW IF EXISTS bronze.vw_sales\nGO\n\nCREATE VIEW bronze.vw_sales\nAS\nSELECT SalesOrderLineKey as pos_transaction_id\n     , ProductKey as product_id\n\t , UnitPrice as item_price\n\t , OrderQuantity as item_qty\n\t , ProductStandardCost as item_cost\n\t , SalesAmount as total_sales_amt\n\t , TotalProductCost as total_cost_amt\n     , UnitPriceDiscountPct as item_price_disc\n     , ExtendedAmount as extended_amt\n     , SalesTerritoryKey as sales_territory_id\n     , OrderDateKey as order_dt\n     , CustomerKey as customer_id\n     , ResellerKey as reseller_id\n   \t , ShipDateKey as transaction_dt\n\t , DueDateKey as batch_dt\nFROM\n    OPENROWSET(\n        BULK 'Sales/Sales.csv',\n        DATA_SOURCE = 'adw_sources',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) \n    WITH (\n        SalesAmount\tdecimal(8,2) 1,\n        TotalProductCost\tdecimal(8,2) 2,\n        ProductStandardCost\tdecimal(8,2) 3,\n        UnitPriceDiscountPct\tdecimal(8,2) 4,\n        ExtendedAmount\tdecimal(8,2) 5,\n        UnitPrice\tdecimal(8,2) 6,\n        OrderQuantity\tinteger 7,\n        SalesTerritoryKey\tinteger 8,\n        ShipDateKey\tinteger 9,\n        DueDateKey\tinteger 10,\n        OrderDateKey\tinteger 11,\n        ProductKey\tinteger 12,\n        CustomerKey\tinteger 13,\n        ResellerKey\tinteger 14,\n        SalesOrderLineKey\tinteger 15\n    )\n    AS r",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "adv_raw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/create_silver_calendar')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "adv/raw/silver/calendar"
+				},
+				"content": {
+					"query": "USE adv_raw\ngo \n\nIF OBJECT_ID('silver.calendar') IS NOT NULL\n    DROP EXTERNAL TABLE silver.calendar\nGO\n\n-- Create table\nCREATE EXTERNAL TABLE silver.calendar\nWITH (LOCATION = 'calendar/', DATA_SOURCE = [adw_raw], FILE_FORMAT = [ParquetFormat])\nAS\n  select cast(date_id as int) as day_id\n\t   , cast(month_id as int) as month_id\n\t   , cast(substring(month_id,1,4) as int)  year_id\n       , fiscal_month as fiscal_month_nm\n       , fiscal_quarter as fiscal_quarter_nm\n       , fiscal_year as fiscal_year_nm\n    from bronze.vw_calendar\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "adv_raw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/create_silver_products')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "adv/raw/silver/products"
+				},
+				"content": {
+					"query": "IF OBJECT_ID('silver.products') IS NOT NULL\n    DROP EXTERNAL TABLE silver.products\nGO\n\n-- Create table\nCREATE EXTERNAL TABLE silver.products\n(\n\tsku_num VARCHAR(100),\n\tproduct_nm VARCHAR(200),\n\tcategory_nm VARCHAR(100),\n\tsub_category_nm VARCHAR(100),\n\titem_price_amt decimal(8,2),\n\tstandard_cost_amt decimal(8,2),\n\tcolor_nm VARCHAR(100),\n\tmodel_nm VARCHAR(200)\n)\nWITH (LOCATION = 'products/**', DATA_SOURCE = [adw_raw], FILE_FORMAT = [ParquetFormat])\nGO\n\n-- Create view\nDROP VIEW IF EXISTS silver.vw_products\nGO\n\nCREATE VIEW silver.vw_products\nAS\nSELECT\n    \n    result.*, result.filepath(1) AS batch_dt\nFROM\n    OPENROWSET(\n        BULK 'products/batch_dt=*/*.parquet',\n        DATA_SOURCE = 'adw_raw',\n        FORMAT = 'PARQUET'\n    )\n  WITH (\n\tsku_num VARCHAR(100),\n\tproduct_nm VARCHAR(200),\n\tcategory_nm VARCHAR(100),\n\tsub_category_nm VARCHAR(100),\n\titem_price_amt decimal(8,2),\n\tstandard_cost_amt decimal(8,2),\n\tcolor_nm VARCHAR(100),\n\tmodel_nm VARCHAR(200)\n  ) AS [result]\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "adv_raw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/create_silver_sales')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "adv/raw/silver/sales"
+				},
+				"content": {
+					"query": "IF OBJECT_ID('silver.sales') IS NOT NULL\n    DROP EXTERNAL TABLE silver.sales\nGO\n\n-- Create table\nCREATE EXTERNAL TABLE silver.sales\n(\n\t[pos_transaction_id] [int],\n\t[product_id] [int],\n\t[item_price] [numeric](8, 2),\n\t[item_qty] [int],\n\t[item_cost] [numeric](8, 2),\n\t[total_sales_amt] [numeric](8, 2),\n\t[total_cost_amt] [numeric](8, 2),\n\t[transaction_dt] [int]\n)\nWITH (LOCATION = 'sales/**', DATA_SOURCE = [adw_raw], FILE_FORMAT = [ParquetFormat])\nGO\n\n-- Create view\nDROP VIEW IF EXISTS silver.vw_sales\nGO\n\nCREATE VIEW silver.vw_sales\nAS\nSELECT\n    \n    result.*, result.filepath(1) AS batch_dt\nFROM\n    OPENROWSET(\n        BULK 'sales/batch_dt=*/*.parquet',\n        DATA_SOURCE = 'adw_raw',\n        FORMAT = 'PARQUET'\n    )\n  WITH (\n\t[pos_transaction_id] [int],\n\t[product_id] [int],\n\t[item_price] [numeric](8, 2),\n\t[item_qty] [int],\n\t[item_cost] [numeric](8, 2),\n\t[total_sales_amt] [numeric](8, 2),\n\t[total_cost_amt] [numeric](8, 2),\n\t[transaction_dt] [int]\n  ) AS [result]\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "adv_raw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/serverless_cost_control')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -2603,12 +2563,58 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/usp_load_products_raw')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "adv/raw/silver/products"
+				},
+				"content": {
+					"query": "USE adv_raw\nGO\n\nCREATE OR ALTER PROCEDURE silver.usp_load_products_raw\n@esp_dt VARCHAR(8)\nAS\nBEGIN\n\n    DECLARE @create_sql_stmt NVARCHAR(MAX),\n            @drop_sql_stmt   NVARCHAR(MAX);\n\n    SET @create_sql_stmt = \n        'CREATE EXTERNAL TABLE silver.products_' + @esp_dt  + \n        ' WITH\n            (\n                DATA_SOURCE = adw_raw,\n                LOCATION = ''products/batch_dt=' + @esp_dt + ''',\n                FILE_FORMAT = ParquetFormat\n            )\n        AS\n        select p.sku_num\n             , p.product_nm\n             , p.category_nm\n             , p.sub_category_nm\n             , s.item_price as item_price_amt\n             , p.standard_cost_amt  \n             , p.color_nm, p.model_nm\n             , s.batch_dt\n          from bronze.vw_products p join silver.vw_sales s \n            on p.product_id  = s.product_id\n         where s.batch_dt = ''' + @esp_dt + '''\n        ';    \n\n    print(@create_sql_stmt)\n\n    EXEC sp_executesql @create_sql_stmt;\n\n    SET @drop_sql_stmt = \n        'DROP EXTERNAL TABLE silver.products_' + @esp_dt ;\n\n    print(@drop_sql_stmt)\n    EXEC sp_executesql @drop_sql_stmt;\n\nEND;\n\n\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "adv_raw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/usp_load_sales_raw')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "adv/raw/silver/sales"
+				},
+				"content": {
+					"query": "USE adv_raw\nGO\n\nCREATE OR ALTER PROCEDURE silver.usp_load_sales_raw\n@esp_dt VARCHAR(8)\nAS\nBEGIN\n\n    DECLARE @create_sql_stmt NVARCHAR(MAX),\n            @drop_sql_stmt   NVARCHAR(MAX);\n\n    SET @create_sql_stmt = \n        'CREATE EXTERNAL TABLE silver.sales_' + @esp_dt  + \n        ' WITH\n            (\n                DATA_SOURCE = adw_raw,\n                LOCATION = ''sales/batch_dt=' + @esp_dt + ''',\n                FILE_FORMAT = ParquetFormat\n            )\n        AS\n        SELECT pos_transaction_id\n            , product_id\n            , item_price\n            , item_qty\n            , item_cost\n            , total_sales_amt\n            , total_cost_amt\n            , transaction_dt\n        FROM bronze.vw_sales\n        WHERE batch_dt = ''' + @esp_dt + '''\n        ';    \n\n    print(@create_sql_stmt)\n\n    EXEC sp_executesql @create_sql_stmt;\n\n    SET @drop_sql_stmt = \n        'DROP EXTERNAL TABLE silver.sales_' + @esp_dt ;\n\n    print(@drop_sql_stmt)\n    EXEC sp_executesql @drop_sql_stmt;\n\nEND;\n\n\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "adv_raw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/1_spark_create_gold_trip_data_green_agg')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "test"
+					"name": "course"
 				},
 				"nbformat": 4,
 				"nbformat_minor": 2,
@@ -2627,14 +2633,11 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "b1c3a82d-30ff-4d81-a0cc-00f1cedf5ef3"
+						"spark.autotune.trackingId": "1e050b89-97cf-4354-bb8a-a1157e051e07"
 					}
 				},
 				"metadata": {
 					"saveOutput": true,
-					"synapse_widget": {
-						"version": "0.1"
-					},
 					"enableDebugMode": false,
 					"kernelspec": {
 						"name": "synapse_pyspark",
@@ -2650,14 +2653,12 @@
 						"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
 						"auth": {
 							"type": "AAD",
-							"authResource": "https://dev.azuresynapse.net",
-							"authHeader": null
+							"authResource": "https://dev.azuresynapse.net"
 						},
 						"sparkVersion": "3.3",
 						"nodeCount": 3,
 						"cores": 4,
-						"memory": 28,
-						"extraHeader": null
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30
 				},
@@ -3300,6 +3301,9 @@
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
+				"folder": {
+					"name": "adv"
+				},
 				"nbformat": 4,
 				"nbformat_minor": 2,
 				"bigDataPool": {
@@ -3317,14 +3321,11 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "7fea0270-a206-4a33-9c38-aaf2f49bebfc"
+						"spark.autotune.trackingId": "7868088a-3419-49a8-a5f3-f34146cb54ca"
 					}
 				},
 				"metadata": {
 					"saveOutput": true,
-					"synapse_widget": {
-						"version": "0.1"
-					},
 					"enableDebugMode": false,
 					"kernelspec": {
 						"name": "synapse_pyspark",
@@ -3340,14 +3341,12 @@
 						"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
 						"auth": {
 							"type": "AAD",
-							"authResource": "https://dev.azuresynapse.net",
-							"authHeader": null
+							"authResource": "https://dev.azuresynapse.net"
 						},
 						"sparkVersion": "3.3",
 						"nodeCount": 3,
 						"cores": 4,
-						"memory": 28,
-						"extraHeader": null
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 5
 				},
@@ -3358,7 +3357,7 @@
 							"collapsed": false
 						},
 						"source": [
-							"esp_date = 20170710\r\n",
+							"esp_date = 20170711\r\n",
 							"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\"\r\n",
 							"raw_folder_path = f'{base_path}/raw'\r\n",
 							"sys = mssparkutils.notebook\r\n",
@@ -3412,7 +3411,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "adv/edw/pipelines/edw/calendar_dim"
+					"name": "adv/edw/pipelines/calendar_dim"
 				},
 				"nbformat": 4,
 				"nbformat_minor": 2,
@@ -3552,7 +3551,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "adv/edw/pipelines/edw/product_dim"
+					"name": "adv/edw/pipelines/product_dim"
 				},
 				"nbformat": 4,
 				"nbformat_minor": 2,
@@ -3828,7 +3827,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "adv/edw/pipelines/edw/sales_fct"
+					"name": "adv/edw/pipelines/sales_fct"
 				},
 				"nbformat": 4,
 				"nbformat_minor": 2,
@@ -3847,14 +3846,11 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "1cc7ebd8-0547-4d91-b752-c996bda6f0a3"
+						"spark.autotune.trackingId": "ee88ec1e-1434-4e38-b465-cef599965678"
 					}
 				},
 				"metadata": {
 					"saveOutput": true,
-					"synapse_widget": {
-						"version": "0.1"
-					},
 					"enableDebugMode": false,
 					"kernelspec": {
 						"name": "synapse_pyspark",
@@ -3870,14 +3866,12 @@
 						"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
 						"auth": {
 							"type": "AAD",
-							"authResource": "https://dev.azuresynapse.net",
-							"authHeader": null
+							"authResource": "https://dev.azuresynapse.net"
 						},
 						"sparkVersion": "3.3",
 						"nodeCount": 3,
 						"cores": 4,
-						"memory": 28,
-						"extraHeader": null
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 5
 				},
@@ -3928,163 +3922,10 @@
 							"    sys.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
 							"\r\n",
 							"raw_sales_df.createOrReplaceTempView('ref_raw_sales')\r\n",
-							"\r\n",
-							"\r\n",
-							"try:\r\n",
-							"    raw_sales_df = spark.read.parquet(f\"{base_path}/sources/sales/batch_dt={esp_date}/*.parquet\")\r\n",
-							"except:\r\n",
-							"    sys.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
-							"\r\n",
-							"raw_sales_df.createOrReplaceTempView('ref_raw_sales')\r\n",
-							"\r\n",
-							"\r\n",
-							""
+							"raw_sales_df.show()"
 						],
 						"outputs": [],
 						"execution_count": 23
-					},
-					{
-						"cell_type": "code",
-						"metadata": {
-							"jupyter": {
-								"source_hidden": false,
-								"outputs_hidden": false
-							},
-							"nteract": {
-								"transient": {
-									"deleting": false
-								}
-							},
-							"microsoft": {
-								"language": "python"
-							}
-						},
-						"source": [
-							"%%pyspark\r\n",
-							"\r\n",
-							"trg_df = spark.sql(\"select * from adv_edw.product_dim\")\r\n",
-							"trg_df.createOrReplaceTempView('ref_product_trg')\r\n",
-							"#trg_df.show(50)"
-						],
-						"outputs": []
-					},
-					{
-						"cell_type": "code",
-						"metadata": {
-							"jupyter": {
-								"source_hidden": false,
-								"outputs_hidden": false
-							},
-							"nteract": {
-								"transient": {
-									"deleting": false
-								}
-							},
-							"microsoft": {
-								"language": "sparksql"
-							},
-							"collapsed": false
-						},
-						"source": [
-							"\r\n",
-							"%%sql\r\n",
-							"-- Merge statement to handle upsert of RAW dataset into TRG table\r\n",
-							"MERGE INTO adv_edw.product_dim t\r\n",
-							"USING (\r\n",
-							"    SELECT sku_num AS MergeKey, \r\n",
-							"           raw.sku_num, raw.product_nm, raw.category_nm, raw.sub_category_nm\r\n",
-							"         , raw.item_price_amt, raw.standard_cost_amt, raw.color_nm\r\n",
-							"         , raw.load_ts, raw.raw_batch_dt\r\n",
-							"    FROM ref_product_raw raw\r\n",
-							"\r\n",
-							"    UNION ALL\r\n",
-							"\r\n",
-							"    SELECT null AS MergeKey, \r\n",
-							"           raw.sku_num, raw.product_nm, raw.category_nm, raw.sub_category_nm\r\n",
-							"         , raw.item_price_amt, raw.standard_cost_amt, raw.color_nm\r\n",
-							"         , raw.load_ts, raw.raw_batch_dt\r\n",
-							"    FROM ref_product_raw AS raw\r\n",
-							"    JOIN ref_product_trg AS trg ON trg.sku_num = raw.sku_num\r\n",
-							"    WHERE trg.current_record_ind = 1 \r\n",
-							"      AND ( trg.product_nm <> raw.product_nm\r\n",
-							"         or trg.item_price_amt <> raw.item_price_amt\r\n",
-							"          )\r\n",
-							") s\r\n",
-							"ON t.sku_num = s.MergeKey\r\n",
-							"WHEN MATCHED AND t.current_record_ind = 1 \r\n",
-							" AND ( t.product_nm <> s.product_nm\r\n",
-							"    or t.category_nm <> s.category_nm\r\n",
-							"    or t.sub_category_nm <> s.sub_category_nm\r\n",
-							"    or t.item_price_amt <> s.item_price_amt\r\n",
-							"    or t.standard_cost_amt <> s.standard_cost_amt\r\n",
-							"    or t.color_nm <> s.color_nm\r\n",
-							"    )\r\n",
-							" THEN\r\n",
-							"  UPDATE SET t.current_record_ind = 0, t.end_date = (to_date('${esp_date}',\"yyyyMMdd\"))\r\n",
-							"WHEN NOT MATCHED THEN\r\n",
-							"  INSERT (sku_num, effective_date, end_date, product_nm, category_nm, sub_category_nm, \r\n",
-							"          item_price_amt, standard_cost_amt, color_nm, load_ts, raw_batch_dt, current_record_ind) \r\n",
-							"  VALUES (s.sku_num, to_date('${esp_date}',\"yyyyMMdd\"), '9999-12-31', s.product_nm, s.category_nm, s.sub_category_nm, \r\n",
-							"          s.item_price_amt, s.standard_cost_amt, s.color_nm, s.load_ts, s.raw_batch_dt, 1)"
-						],
-						"outputs": []
-					},
-					{
-						"cell_type": "code",
-						"metadata": {
-							"jupyter": {
-								"source_hidden": false,
-								"outputs_hidden": false
-							},
-							"nteract": {
-								"transient": {
-									"deleting": false
-								}
-							},
-							"microsoft": {
-								"language": "python"
-							}
-						},
-						"source": [
-							"%%pyspark\r\n",
-							"\r\n",
-							"(spark.read\r\n",
-							" .format(\"delta\").load(f\"{base_path}/edw/product_dim/\") #delta table folder to read from\r\n",
-							" .repartition(1) #number of files to write\r\n",
-							" .write.option(\"dataChange\", \"false\") #do not change the data\r\n",
-							" .format(\"delta\").mode(\"overwrite\").save(f\"{base_path}/edw/product_dim/\")) #location to write new file(s)"
-						],
-						"outputs": [],
-						"execution_count": 8
-					},
-					{
-						"cell_type": "code",
-						"metadata": {
-							"jupyter": {
-								"source_hidden": false,
-								"outputs_hidden": false
-							},
-							"nteract": {
-								"transient": {
-									"deleting": false
-								}
-							},
-							"microsoft": {
-								"language": "sparksql"
-							},
-							"collapsed": false
-						},
-						"source": [
-							"%%sql\r\n",
-							"\r\n",
-							"--Vacuum files where table version is older than 7 days \r\n",
-							"VACUUM adv_edw.product_dim RETAIN 168 HOURS;\r\n",
-							"\r\n",
-							"-- Retrieve the version/change history of the Delta table\r\n",
-							"--DESCRIBE HISTORY avd_edw.products_dim;"
-						],
-						"outputs": [],
-						"execution_count": 14
 					}
 				]
 			},
@@ -4096,7 +3937,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "adv/edw/pipelines/edw/product_dim/ddl"
+					"name": "adv/edw/dll"
 				},
 				"nbformat": 4,
 				"nbformat_minor": 2,
@@ -4196,7 +4037,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "adv/edw/pipelines/edw/sales_fct/ddl"
+					"name": "adv/edw/dll"
 				},
 				"nbformat": 4,
 				"nbformat_minor": 2,
