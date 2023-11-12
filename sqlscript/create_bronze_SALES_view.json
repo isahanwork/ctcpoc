@@ -1,5 +1,5 @@
 {
-	"name": "1_create_bronze_SALES_view",
+	"name": "create_bronze_SALES_view",
 	"properties": {
 		"folder": {
 			"name": "adv/raw/bronze"

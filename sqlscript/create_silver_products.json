@@ -1,5 +1,5 @@
 {
-	"name": "1_create_silver_products",
+	"name": "create_silver_products",
 	"properties": {
 		"folder": {
 			"name": "adv/raw/silver/products"

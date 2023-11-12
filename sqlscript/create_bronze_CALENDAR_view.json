@@ -1,5 +1,5 @@
 {
-	"name": "2_create_bronze_CALENDAR_view",
+	"name": "create_bronze_CALENDAR_view",
 	"properties": {
 		"folder": {
 			"name": "adv/raw/bronze"
