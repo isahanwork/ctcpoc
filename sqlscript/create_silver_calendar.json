@@ -1,5 +1,5 @@
 {
-	"name": "1_create_silver_calendar",
+	"name": "create_silver_calendar",
 	"properties": {
 		"folder": {
 			"name": "adv/raw/silver/calendar"

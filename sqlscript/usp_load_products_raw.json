@@ -1,5 +1,5 @@
 {
-	"name": "2_usp_load_products_raw",
+	"name": "usp_load_products_raw",
 	"properties": {
 		"folder": {
 			"name": "adv/raw/silver/products"
