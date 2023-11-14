@@ -5,6 +5,9 @@
 		"workspaceName": {
 			"value": "synapse-course-isws"
 		},
+		"ctc-poc-prod-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:ctc-poc-prod.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
 		"ls_adv_raw_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapse-course-isws-ondemand.sql.azuresynapse.net,1433;Initial Catalog=adv_raw"
 		},
@@ -13,6 +16,9 @@
 		},
 		"synapse-course-isws-WorkspaceDefaultSqlServer_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapse-course-isws.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"ctc-poc-prod-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://issynapsecoursedl.dfs.core.windows.net"
 		},
 		"ls_synapsecoursedl_properties_typeProperties_url": {
 			"value": "https://issynapsecoursedl.dfs.core.windows.net/"
