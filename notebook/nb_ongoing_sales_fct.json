@@ -1,8 +1,9 @@
 {
-	"name": "ongoing_sales_fct",
+	"name": "nb_ongoing_sales_fct",
 	"properties": {
+		"description": "ongoing script for Sales_fct and Sales_Item_fct tables",
 		"folder": {
-			"name": "adv/edw/pipelines/sales_fct"
+			"name": "adv/pySpark/sales_fct"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
@@ -21,7 +22,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "ee88ec1e-1434-4e38-b465-cef599965678"
+				"spark.autotune.trackingId": "6d85c7d6-aa5a-4aa5-820b-fa4b9da9c248"
 			}
 		},
 		"metadata": {
@@ -53,6 +54,19 @@
 		},
 		"cells": [
 			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Setup input parameters ##"
+				]
+			},
+			{
 				"cell_type": "code",
 				"metadata": {
 					"tags": [
@@ -60,10 +74,41 @@
 					]
 				},
 				"source": [
-					"esp_date = \"\"\r\n",
+					"esp_date = \"20170711\"\r\n",
 					"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 6
+				"execution_count": 18
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"read_raw_table()"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Read a source table"
+				]
 			},
 			{
 				"cell_type": "code",
@@ -79,27 +124,97 @@
 					},
 					"microsoft": {
 						"language": "python"
+					},
+					"ms_comments": [
+						{
+							"threadId": "480b5ada-291f-43aa-919c-defe3b4f1649",
+							"text": "need fix this",
+							"status": "active",
+							"user": {
+								"name": "Ihor Sahan",
+								"idType": "aad"
+							},
+							"createdDateUTC": 1699993686445,
+							"modifiedDateUTC": 1699993686445,
+							"replies": [
+								{
+									"replyId": "a440669c-bf17-45eb-a44b-5b9d3b5d23e2",
+									"text": "Iryna please take a look",
+									"user": {
+										"name": "Ihor Sahan",
+										"idType": "aad"
+									},
+									"createdDateUTC": 1699993802791,
+									"modifiedDateUTC": 1699993802791
+								},
+								{
+									"replyId": "fbbfcf29-832a-499e-b6a1-d077b950a98c",
+									"text": "trtrty",
+									"user": {
+										"name": "Ihor Sahan",
+										"idType": "aad"
+									},
+									"createdDateUTC": 1699993825844,
+									"modifiedDateUTC": 1699993825844
+								},
+								{
+									"replyId": "77c8a860-5356-46ab-8372-031c6df348fe",
+									"text": "dfghdfgh",
+									"user": {
+										"name": "Ihor Sahan",
+										"idType": "aad"
+									},
+									"createdDateUTC": 1699993828425,
+									"modifiedDateUTC": 1699993828425
+								},
+								{
+									"replyId": "c146aec8-f3c5-49da-8afb-3e08c1c3e1c4",
+									"text": "fgh",
+									"user": {
+										"name": "Ihor Sahan",
+										"idType": "aad"
+									},
+									"createdDateUTC": 1699993832799,
+									"modifiedDateUTC": 1699993832799
+								}
+							]
+						}
+					],
+					"ms_comment_ranges": {
+						"480b5ada-291f-43aa-919c-defe3b4f1649": {
+							"text": "spark.conf.set(\"esp_date\", esp_date)  ",
+							"start": {
+								"line": 7,
+								"column": 5
+							},
+							"end": {
+								"line": 7,
+								"column": 43
+							}
+						}
 					}
 				},
 				"source": [
 					"%%pyspark\r\n",
 					"\r\n",
-					"print(esp_date)\r\n",
+					"def read_raw_table():\r\n",
 					"\r\n",
-					"spark.conf.set(\"esp_date\", esp_date)  \r\n",
+					"    print(esp_date)\r\n",
 					"\r\n",
-					"sys = mssparkutils.notebook\r\n",
+					"    spark.conf.set(\"esp_date\", esp_date)  \r\n",
+					"\r\n",
+					"    sys = mssparkutils.notebook\r\n",
 					"\r\n",
 					"\r\n",
-					"try:\r\n",
-					"    raw_sales_df = spark.read.parquet(f\"{base_path}/raw/sales/batch_dt={esp_date}/*.parquet\")\r\n",
-					"except:\r\n",
-					"    sys.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
+					"    try:\r\n",
+					"        raw_sales_df = spark.read.parquet(f\"{base_path}/raw/sales/batch_dt={esp_date}/*.parquet\")\r\n",
+					"    except:\r\n",
+					"        sys.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
 					"\r\n",
-					"raw_sales_df.createOrReplaceTempView('ref_raw_sales')\r\n",
-					"raw_sales_df.show()"
+					"    raw_sales_df.createOrReplaceTempView('ref_raw_sales')\r\n",
+					"    raw_sales_df.show()"
 				],
-				"execution_count": 23
+				"execution_count": 6
 			}
 		]
 	}

@@ -1,8 +1,8 @@
 {
-	"name": "recreate product_dim table",
+	"name": "nb_recreate_product_dim",
 	"properties": {
 		"folder": {
-			"name": "adv/edw/dll"
+			"name": "adv/dll"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
@@ -21,14 +21,11 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "a502e4ed-0f0e-485c-8474-e0083c76baac"
+				"spark.autotune.trackingId": "fc2ccbf8-b8a4-4027-8fa9-6bd27e98664c"
 			}
 		},
 		"metadata": {
 			"saveOutput": true,
-			"synapse_widget": {
-				"version": "0.1"
-			},
 			"enableDebugMode": false,
 			"kernelspec": {
 				"name": "synapse_pyspark",
@@ -44,14 +41,13 @@
 				"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
 				"auth": {
 					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net",
-					"authHeader": null
+					"authResource": "https://dev.azuresynapse.net"
 				},
 				"sparkVersion": "3.3",
 				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
-				"extraHeader": null
+				"automaticScaleJobs": false
 			},
 			"sessionKeepAliveTimeout": 5
 		},

@@ -1,8 +1,8 @@
 {
-	"name": "ongoing_product_dim",
+	"name": "nb_ongoing_product_dim",
 	"properties": {
 		"folder": {
-			"name": "adv/edw/pipelines/product_dim"
+			"name": "adv/pySpark/product_dim"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
@@ -21,14 +21,11 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "347c210d-6e78-461c-abb8-1eb6bddf1a09"
+				"spark.autotune.trackingId": "f927e27b-009a-4ccf-8fe1-748ae00334e3"
 			}
 		},
 		"metadata": {
 			"saveOutput": true,
-			"synapse_widget": {
-				"version": "0.1"
-			},
 			"enableDebugMode": false,
 			"kernelspec": {
 				"name": "synapse_pyspark",
@@ -44,14 +41,13 @@
 				"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
 				"auth": {
 					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net",
-					"authHeader": null
+					"authResource": "https://dev.azuresynapse.net"
 				},
 				"sparkVersion": "3.3",
 				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
-				"extraHeader": null
+				"automaticScaleJobs": false
 			},
 			"sessionKeepAliveTimeout": 5
 		},
@@ -145,7 +141,8 @@
 					"trg_df = spark.sql(\"select * from adv_edw.product_dim\")\r\n",
 					"trg_df.createOrReplaceTempView('ref_product_trg')\r\n",
 					"#trg_df.show(50)"
-				]
+				],
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -205,7 +202,8 @@
 					"          item_price_amt, standard_cost_amt, color_nm, load_ts, raw_batch_dt, current_record_ind) \r\n",
 					"  VALUES (s.sku_num, to_date('${esp_date}',\"yyyyMMdd\"), '9999-12-31', s.product_nm, s.category_nm, s.sub_category_nm, \r\n",
 					"          s.item_price_amt, s.standard_cost_amt, s.color_nm, s.load_ts, s.raw_batch_dt, 1)"
-				]
+				],
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
