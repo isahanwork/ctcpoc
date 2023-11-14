@@ -1,8 +1,8 @@
 {
-	"name": "Create EDW Lake Database",
+	"name": "nb_recreate_sales_fct",
 	"properties": {
 		"folder": {
-			"name": "adv/edw/dll"
+			"name": "adv/dll"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
@@ -21,14 +21,11 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "f5a1f65f-d80d-4066-80de-e6b5acbc8f74"
+				"spark.autotune.trackingId": "bb13af4a-3b80-4ab7-b7d7-6a4a8bc70317"
 			}
 		},
 		"metadata": {
 			"saveOutput": true,
-			"synapse_widget": {
-				"version": "0.1"
-			},
 			"enableDebugMode": false,
 			"kernelspec": {
 				"name": "synapse_pyspark",
@@ -44,14 +41,13 @@
 				"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
 				"auth": {
 					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net",
-					"authHeader": null
+					"authResource": "https://dev.azuresynapse.net"
 				},
 				"sparkVersion": "3.3",
 				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
-				"extraHeader": null
+				"automaticScaleJobs": false
 			},
 			"sessionKeepAliveTimeout": 5
 		},
@@ -59,27 +55,28 @@
 			{
 				"cell_type": "code",
 				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					},
 					"microsoft": {
-						"language": "python"
+						"language": "sparksql"
 					},
 					"collapsed": false
 				},
 				"source": [
-					"%%pyspark\r\n",
+					"%%sql\r\n",
 					"\r\n",
-					"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\"\r\n",
+					"USE adv_edw;\r\n",
 					"\r\n",
-					"#spark.sql(\"DROP DATABASE IF EXISTS adv_edw CASCADE\")\r\n",
-					"spark.sql(f\"CREATE DATABASE IF NOT EXISTS adv_edw LOCATION '{base_path}/edw'\")\r\n",
+					"DROP table if exists sales_fct;\r\n",
+					"\r\n",
+					"CREATE TABLE IF NOT EXISTS sales_fct (\r\n",
+					"\tpos_transaction_id int,\r\n",
+					"\tsku_num varchar(100),\r\n",
+					"\titem_price_amt decimal(8,2),\r\n",
+					"\titem_qty int,\r\n",
+					"\traw_batch_dt int,\r\n",
+					"\tload_ts timestamp,\r\n",
+					"    transaction_date date\r\n",
+					"\t)\r\n",
+					"USING DELTA\r\n",
 					""
 				],
 				"execution_count": 3

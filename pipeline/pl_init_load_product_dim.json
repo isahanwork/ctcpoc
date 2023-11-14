@@ -18,7 +18,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"notebook": {
-						"referenceName": "recreate product_dim table",
+						"referenceName": "nb_recreate_product_dim",
 						"type": "NotebookReference"
 					},
 					"snapshot": true,

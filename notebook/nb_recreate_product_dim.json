@@ -1,8 +1,8 @@
 {
-	"name": "recreate sales_fct table",
+	"name": "nb_recreate_product_dim",
 	"properties": {
 		"folder": {
-			"name": "adv/edw/dll"
+			"name": "adv/dll"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
@@ -21,14 +21,11 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "bbd72ed7-fb2a-4e93-8fdf-4264f16df0a3"
+				"spark.autotune.trackingId": "fc2ccbf8-b8a4-4027-8fa9-6bd27e98664c"
 			}
 		},
 		"metadata": {
 			"saveOutput": true,
-			"synapse_widget": {
-				"version": "0.1"
-			},
 			"enableDebugMode": false,
 			"kernelspec": {
 				"name": "synapse_pyspark",
@@ -44,14 +41,13 @@
 				"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
 				"auth": {
 					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net",
-					"authHeader": null
+					"authResource": "https://dev.azuresynapse.net"
 				},
 				"sparkVersion": "3.3",
 				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
-				"extraHeader": null
+				"automaticScaleJobs": false
 			},
 			"sessionKeepAliveTimeout": 5
 		},
@@ -69,17 +65,23 @@
 					"\r\n",
 					"USE adv_edw;\r\n",
 					"\r\n",
-					"DROP table if exists sales_fct;\r\n",
+					"DROP table if exists product_dim;\r\n",
 					"\r\n",
-					"CREATE TABLE IF NOT EXISTS sales_fct (\r\n",
-					"\tpos_transaction_id int,\r\n",
-					"\tsku_num varchar(100),\r\n",
+					"CREATE TABLE IF NOT EXISTS product_dim (\r\n",
+					"\tsku_num VARCHAR(100) not null,\r\n",
+					"    effective_date date,\r\n",
+					"    end_date date,\r\n",
+					"\tproduct_nm VARCHAR(200),\r\n",
+					"\tcategory_nm VARCHAR(100),\r\n",
+					"\tsub_category_nm VARCHAR(100),\r\n",
 					"\titem_price_amt decimal(8,2),\r\n",
-					"\titem_qty int,\r\n",
-					"\traw_batch_dt int,\r\n",
+					"\tstandard_cost_amt decimal(8,2),\r\n",
+					"\tcolor_nm VARCHAR(100),\r\n",
 					"\tload_ts timestamp,\r\n",
-					"    transaction_date date\r\n",
-					"\t)\r\n",
+					"\traw_batch_dt int,\r\n",
+					"  current_record_ind int\r\n",
+					"\r\n",
+					")\r\n",
 					"USING DELTA\r\n",
 					""
 				],

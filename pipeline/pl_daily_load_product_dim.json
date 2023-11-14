@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"notebook": {
-						"referenceName": "ongoing_product_dim",
+						"referenceName": "nb_ongoing_product_dim",
 						"type": "NotebookReference"
 					},
 					"parameters": {

@@ -1,9 +1,6 @@
 {
 	"name": "Dev Notebook",
 	"properties": {
-		"folder": {
-			"name": "adv"
-		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
@@ -21,7 +18,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "7868088a-3419-49a8-a5f3-f34146cb54ca"
+				"spark.autotune.trackingId": "fdc98d2a-f758-4558-a74d-5e2d3dae710e"
 			}
 		},
 		"metadata": {
@@ -72,7 +69,7 @@
 					"raw_df.show()\r\n",
 					""
 				],
-				"execution_count": 62
+				"execution_count": 4
 			},
 			{
 				"cell_type": "code",

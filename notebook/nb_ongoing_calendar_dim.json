@@ -1,8 +1,8 @@
 {
-	"name": "ongoing_sales_fct",
+	"name": "nb_ongoing_calendar_dim",
 	"properties": {
 		"folder": {
-			"name": "adv/edw/pipelines/sales_fct"
+			"name": "adv/pySpark/calendar_dim"
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "ee88ec1e-1434-4e38-b465-cef599965678"
+				"spark.autotune.trackingId": "b577bec5-e3e1-4104-b3a0-09b51ff79d20"
 			}
 		},
 		"metadata": {
@@ -55,19 +55,6 @@
 			{
 				"cell_type": "code",
 				"metadata": {
-					"tags": [
-						"parameters"
-					]
-				},
-				"source": [
-					"esp_date = \"\"\r\n",
-					"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
-				],
-				"execution_count": 6
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
 					"jupyter": {
 						"source_hidden": false,
 						"outputs_hidden": false
@@ -84,22 +71,60 @@
 				"source": [
 					"%%pyspark\r\n",
 					"\r\n",
-					"print(esp_date)\r\n",
-					"\r\n",
-					"spark.conf.set(\"esp_date\", esp_date)  \r\n",
+					"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\"\r\n",
 					"\r\n",
 					"sys = mssparkutils.notebook\r\n",
 					"\r\n",
+					"raw_folder_path = f'{base_path}/raw'\r\n",
 					"\r\n",
 					"try:\r\n",
-					"    raw_sales_df = spark.read.parquet(f\"{base_path}/raw/sales/batch_dt={esp_date}/*.parquet\")\r\n",
+					"    raw_df = spark.read.parquet(f\"{raw_folder_path}/calendar/*.parquet\")\r\n",
 					"except:\r\n",
 					"    sys.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
 					"\r\n",
-					"raw_sales_df.createOrReplaceTempView('ref_raw_sales')\r\n",
-					"raw_sales_df.show()"
+					"raw_df.createOrReplaceTempView('ref_raw')\r\n",
+					"\r\n",
+					"sql = f\"\"\"\r\n",
+					"select \r\n",
+					"       day_id\r\n",
+					"      ,month_id\r\n",
+					"      ,year_id\r\n",
+					"      ,fiscal_month_nm\r\n",
+					"      ,fiscal_quarter_nm\r\n",
+					"      ,fiscal_year_nm\r\n",
+					"      , CURRENT_TIMESTAMP as load_ts \r\n",
+					"  from ref_raw\r\n",
+					"\"\"\"\r\n",
+					"raw_df = spark.sql(sql)\r\n",
+					"raw_df.createOrReplaceTempView('ref_raw')\r\n",
+					"#raw_df.show(50)\r\n",
+					"\r\n",
+					"raw_df.repartition(1).write.mode(\"overwrite\").format(\"delta\").saveAsTable(\"adv_edw.calendar_dim\")"
 				],
-				"execution_count": 23
+				"execution_count": 39
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"DESCRIBE HISTORY adv_edw.calendar_dim"
+				],
+				"execution_count": 41
 			}
 		]
 	}
