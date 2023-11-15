@@ -1053,6 +1053,77 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/pl_init_load_sales_fct')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "nb_backfill_sales_fct",
+						"type": "SynapseNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "nb_backfill_sales_fct",
+								"type": "NotebookReference"
+							},
+							"parameters": {
+								"batch_start_date": {
+									"value": {
+										"value": "@pipeline().parameters.start_date",
+										"type": "Expression"
+									},
+									"type": "int"
+								},
+								"batch_end_date": {
+									"value": {
+										"value": "@pipeline().parameters.end_date",
+										"type": "Expression"
+									},
+									"type": "int"
+								}
+							},
+							"snapshot": true,
+							"conf": {
+								"spark.dynamicAllocation.enabled": null,
+								"spark.dynamicAllocation.minExecutors": null,
+								"spark.dynamicAllocation.maxExecutors": null
+							},
+							"numExecutors": null
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"start_date": {
+						"type": "int",
+						"defaultValue": 20170711
+					},
+					"end_date": {
+						"type": "int",
+						"defaultValue": 20170715
+					}
+				},
+				"folder": {
+					"name": "adv/edw/sales_fct"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/nb_backfill_sales_fct')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/pl_load_products_batches')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
@@ -1079,7 +1150,7 @@
 								{
 									"type": "Query",
 									"text": {
-										"value": "select date_id as esp_dt\n  from bronze.vw_calendar\n where date_id between  @{pipeline().parameters.dt_satart}\n   and  @{pipeline().parameters.dt_end}",
+										"value": "select top(@{pipeline().parameters.days}) date_id as esp_dt\n  from bronze.vw_calendar\n where date_id >=  @{pipeline().parameters.dt_satart}\n order by date_id   ",
 										"type": "Expression"
 									}
 								}
@@ -1182,11 +1253,11 @@
 				"parameters": {
 					"dt_satart": {
 						"type": "string",
-						"defaultValue": "20170710"
+						"defaultValue": "20170711"
 					},
-					"dt_end": {
-						"type": "string",
-						"defaultValue": "20200615"
+					"days": {
+						"type": "int",
+						"defaultValue": 1
 					}
 				},
 				"folder": {
@@ -2554,7 +2625,7 @@
 					"name": "adv/raw/silver/products"
 				},
 				"content": {
-					"query": "IF OBJECT_ID('silver.products') IS NOT NULL\n    DROP EXTERNAL TABLE silver.products\nGO\n\n-- Create table\nCREATE EXTERNAL TABLE silver.products\n(\n\tsku_num VARCHAR(100),\n\tproduct_nm VARCHAR(200),\n\tcategory_nm VARCHAR(100),\n\tsub_category_nm VARCHAR(100),\n\titem_price_amt decimal(8,2),\n\tstandard_cost_amt decimal(8,2),\n\tcolor_nm VARCHAR(100),\n\tmodel_nm VARCHAR(200)\n)\nWITH (LOCATION = 'products/**', DATA_SOURCE = [adw_raw], FILE_FORMAT = [ParquetFormat])\nGO\n\n-- Create view\nDROP VIEW IF EXISTS silver.vw_products\nGO\n\nCREATE VIEW silver.vw_products\nAS\nSELECT\n    \n    result.*, result.filepath(1) AS batch_dt\nFROM\n    OPENROWSET(\n        BULK 'products/batch_dt=*/*.parquet',\n        DATA_SOURCE = 'adw_raw',\n        FORMAT = 'PARQUET'\n    )\n  WITH (\n\tsku_num VARCHAR(100),\n\tproduct_nm VARCHAR(200),\n\tcategory_nm VARCHAR(100),\n\tsub_category_nm VARCHAR(100),\n\titem_price_amt decimal(8,2),\n\tstandard_cost_amt decimal(8,2),\n\tcolor_nm VARCHAR(100),\n\tmodel_nm VARCHAR(200)\n  ) AS [result]\nGO",
+					"query": "IF OBJECT_ID('silver.products') IS NOT NULL\n    DROP EXTERNAL TABLE silver.products\nGO\n\n-- Create table\nCREATE EXTERNAL TABLE silver.products\n(\n\tproduct_id INT,\t\n\tsku_num VARCHAR(100),\n\tproduct_nm VARCHAR(200),\n\tcategory_nm VARCHAR(100),\n\tsub_category_nm VARCHAR(100),\n\titem_price_amt decimal(8,2),\n\tstandard_cost_amt decimal(8,2),\n\tcolor_nm VARCHAR(100),\n\tmodel_nm VARCHAR(200)\n)\nWITH (LOCATION = 'products/**', DATA_SOURCE = [adw_raw], FILE_FORMAT = [ParquetFormat])\nGO\n\n-- Create view\nDROP VIEW IF EXISTS silver.vw_products\nGO\n\nCREATE VIEW silver.vw_products\nAS\nSELECT\n    \n    result.*, result.filepath(1) AS batch_dt\nFROM\n    OPENROWSET(\n        BULK 'products/batch_dt=*/*.parquet',\n        DATA_SOURCE = 'adw_raw',\n        FORMAT = 'PARQUET'\n    )\n  WITH (\n\tproduct_id INT,\t\n\tsku_num VARCHAR(100),\n\tproduct_nm VARCHAR(200),\n\tcategory_nm VARCHAR(100),\n\tsub_category_nm VARCHAR(100),\n\titem_price_amt decimal(8,2),\n\tstandard_cost_amt decimal(8,2),\n\tcolor_nm VARCHAR(100),\n\tmodel_nm VARCHAR(200)\n  ) AS [result]\nGO",
 					"metadata": {
 						"language": "sql"
 					},
@@ -2623,7 +2694,7 @@
 					"name": "adv/raw/silver/products"
 				},
 				"content": {
-					"query": "USE adv_raw\nGO\n\nCREATE OR ALTER PROCEDURE silver.usp_load_products_raw\n@esp_dt VARCHAR(8)\nAS\nBEGIN\n\n    DECLARE @create_sql_stmt NVARCHAR(MAX),\n            @drop_sql_stmt   NVARCHAR(MAX);\n\n    SET @create_sql_stmt = \n        'CREATE EXTERNAL TABLE silver.products_' + @esp_dt  + \n        ' WITH\n            (\n                DATA_SOURCE = adw_raw,\n                LOCATION = ''products/batch_dt=' + @esp_dt + ''',\n                FILE_FORMAT = ParquetFormat\n            )\n        AS\n        select p.sku_num\n             , p.product_nm\n             , p.category_nm\n             , p.sub_category_nm\n             , s.item_price as item_price_amt\n             , p.standard_cost_amt  \n             , p.color_nm, p.model_nm\n             , s.batch_dt\n          from bronze.vw_products p join silver.vw_sales s \n            on p.product_id  = s.product_id\n         where s.batch_dt = ''' + @esp_dt + '''\n        ';    \n\n    print(@create_sql_stmt)\n\n    EXEC sp_executesql @create_sql_stmt;\n\n    SET @drop_sql_stmt = \n        'DROP EXTERNAL TABLE silver.products_' + @esp_dt ;\n\n    print(@drop_sql_stmt)\n    EXEC sp_executesql @drop_sql_stmt;\n\nEND;\n\n\n\n\n",
+					"query": "USE adv_raw\nGO\n\nCREATE OR ALTER PROCEDURE silver.usp_load_products_raw\n@esp_dt VARCHAR(8)\nAS\nBEGIN\n\n    DECLARE @create_sql_stmt NVARCHAR(MAX),\n            @drop_sql_stmt   NVARCHAR(MAX);\n\n    SET @create_sql_stmt = \n        'CREATE EXTERNAL TABLE silver.products_' + @esp_dt  + \n        ' WITH\n            (\n                DATA_SOURCE = adw_raw,\n                LOCATION = ''products/batch_dt=' + @esp_dt + ''',\n                FILE_FORMAT = ParquetFormat\n            )\n        AS\n        select p.product_id\n             , p.sku_num\n             , p.product_nm\n             , p.category_nm\n             , p.sub_category_nm\n             , s.item_price as item_price_amt\n             , p.standard_cost_amt  \n             , p.color_nm, p.model_nm\n             , s.batch_dt\n          from bronze.vw_products p join silver.vw_sales s \n            on p.product_id  = s.product_id\n         where s.batch_dt = ''' + @esp_dt + '''\n        ';    \n\n    print(@create_sql_stmt)\n\n    EXEC sp_executesql @create_sql_stmt;\n\n    SET @drop_sql_stmt = \n        'DROP EXTERNAL TABLE silver.products_' + @esp_dt ;\n\n    print(@drop_sql_stmt)\n    EXEC sp_executesql @drop_sql_stmt;\n\nEND;\n\n\n\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -3371,6 +3442,10 @@
 				},
 				"nbformat": 4,
 				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "coursepool",
+					"type": "BigDataPoolReference"
+				},
 				"sessionProperties": {
 					"driverMemory": "28g",
 					"driverCores": 4,
@@ -3381,7 +3456,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "9bb776a3-aaa4-4ed9-8029-5a060a636162"
+						"spark.autotune.trackingId": "9e6743aa-0299-4603-84a1-b5543d4cebcc"
 					}
 				},
 				"metadata": {
@@ -3389,17 +3464,259 @@
 					"enableDebugMode": false,
 					"kernelspec": {
 						"name": "synapse_pyspark",
-						"display_name": "python"
+						"display_name": "Synapse PySpark"
 					},
 					"language_info": {
 						"name": "python"
 					},
-					"sessionKeepAliveTimeout": 30
+					"a365ComputeOptions": {
+						"id": "/subscriptions/e8466fdf-9bf5-4a95-b888-76e57bd31ac5/resourceGroups/synapse-course-rg/providers/Microsoft.Synapse/workspaces/synapse-course-isws/bigDataPools/coursepool",
+						"name": "coursepool",
+						"type": "Spark",
+						"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.3",
+						"nodeCount": 3,
+						"cores": 4,
+						"memory": 28
+					},
+					"sessionKeepAliveTimeout": 5
 				},
 				"cells": [
 					{
-						"cell_type": "code",
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
 						"source": [
+							"## Recreate Target table "
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"USE adv_edw;\r\n",
+							"\r\n",
+							"DROP table if exists sales_fct;\r\n",
+							"\r\n",
+							"CREATE TABLE IF NOT EXISTS sales_fct (\r\n",
+							"\tpos_transaction_id int,\r\n",
+							"\tsku_num varchar(100),\r\n",
+							"\titem_price_amt decimal(8,2),\r\n",
+							"\titem_qty int,\r\n",
+							"\traw_batch_dt int,\r\n",
+							"\tload_ts timestamp,\r\n",
+							"    transaction_date date\r\n",
+							"\t)\r\n",
+							"USING DELTA\r\n",
+							"PARTITIONED BY (transaction_date)\r\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Init parameters"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"tags": [
+								"parameters"
+							]
+						},
+						"source": [
+							"batch_start_date = \"20170711\"\r\n",
+							"batch_end_date = \"20170715\"\r\n",
+							"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Read source tables"
+						]
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Read Products RAW table"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"df = spark.read.parquet(f\"{path_base}/raw/products/\")\r\n",
+							"df.filter(f\"batch_dt between {batch_start_date} AND {batch_end_date} \") \r\n",
+							"df.createOrReplaceTempView('ref_raw_products')\r\n",
+							"\r\n",
+							"#display(df.limit(5))"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Read Sales RAW table"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"\r\n",
+							"#path_raw_sales = f'{path_base}/raw/sales/'\r\n",
+							"#spark.read.option(\"basePath\", path_raw_sales).parquet(f\"{path_raw_sales}/batch_dt=*/*.parquet\").createOrReplaceTempView('ref_raw')\r\n",
+							"\r\n",
+							"spark.read.parquet(f'{path_base}/raw/sales/').createOrReplaceTempView('ref_raw_sales')\r\n",
+							" \r\n",
+							"sql = f\"\"\"\r\n",
+							"select \r\n",
+							"       s.pos_transaction_id\r\n",
+							"     , p.sku_num\r\n",
+							"     , s.item_price as item_price_amt\r\n",
+							"     , s.item_qty \r\n",
+							"     , s.batch_dt as raw_batch_dt\r\n",
+							"     , CURRENT_TIMESTAMP as load_ts \r\n",
+							"     , to_date(s.transaction_dt,\"yyyyMMdd\") as transaction_date\r\n",
+							"  from ref_raw_sales s\r\n",
+							"  left join ref_raw_products p on s.product_id = p.product_id and s.batch_dt = p.batch_dt\r\n",
+							" where s.batch_dt between {batch_start_date} AND {batch_end_date}\r\n",
+							"\"\"\"\r\n",
+							"raw_df = spark.sql(sql)\r\n",
+							"raw_df.createOrReplaceTempView('ref_stg_sales')\r\n",
+							"\r\n",
+							"raw_df.show(5)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Write to target table"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"SET spark.sql.sources.partitionOverwriteMode=dynamic;\r\n",
+							"\r\n",
+							"insert overwrite table sales_fct partition(transaction_date)\r\n",
+							"select pos_transaction_id\r\n",
+							"     , sku_num\r\n",
+							"     , item_price_amt\r\n",
+							"     , item_qty \r\n",
+							"     , raw_batch_dt\r\n",
+							"     , load_ts \r\n",
+							"     , transaction_date\r\n",
+							"  from ref_stg_sales\r\n",
+							"  ;\r\n",
 							""
 						],
 						"outputs": [],
@@ -3843,7 +4160,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "40cc58c2-0517-4dcf-adbe-b2da861d0c60"
+						"spark.autotune.trackingId": "407aeeda-97b3-4a32-91ab-fd092560fd30"
 					}
 				},
 				"metadata": {
@@ -3868,9 +4185,10 @@
 						"sparkVersion": "3.3",
 						"nodeCount": 3,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
-					"sessionKeepAliveTimeout": 5
+					"sessionKeepAliveTimeout": 15
 				},
 				"cells": [
 					{
@@ -3883,20 +4201,7 @@
 							}
 						},
 						"source": [
-							"# Initialization"
-						]
-					},
-					{
-						"cell_type": "markdown",
-						"metadata": {
-							"nteract": {
-								"transient": {
-									"deleting": false
-								}
-							}
-						},
-						"source": [
-							"## Setup input parameters ##"
+							"## Init input parameters"
 						]
 					},
 					{
@@ -3907,24 +4212,11 @@
 							]
 						},
 						"source": [
-							"esp_date = \"20170711\"\r\n",
-							"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
+							"esp_date = \"20170716\"\r\n",
+							"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 						],
 						"outputs": [],
-						"execution_count": 5
-					},
-					{
-						"cell_type": "markdown",
-						"metadata": {
-							"nteract": {
-								"transient": {
-									"deleting": false
-								}
-							}
-						},
-						"source": [
-							"## Read a source table"
-						]
+						"execution_count": 97
 					},
 					{
 						"cell_type": "code",
@@ -3939,7 +4231,92 @@
 								}
 							},
 							"microsoft": {
-								"language": "python"
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"USE adv_edw;\r\n",
+							"SET spark.sql.sources.partitionOverwriteMode=dynamic;\r\n",
+							"\r\n",
+							"%%pyspark\r\n",
+							"print(esp_date)\r\n",
+							"spark.conf.set(\"esp_date\", esp_date)"
+						],
+						"outputs": [],
+						"execution_count": 104
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Read Source tables"
+						]
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Read Products RAW table"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"#spark.read.parquet(f\"{path_base}/raw/products/batch_dt={esp_date}*/*.parquet\").createOrReplaceTempView('ref_raw_products')\r\n",
+							"df = spark.read.parquet(f\"{path_base}/raw/products/\").createOrReplaceTempView('ref_raw_products')"
+						],
+						"outputs": [],
+						"execution_count": 99
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Read Sales RAW table"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
 							},
 							"ms_comments": [
 								{
@@ -3995,42 +4372,18 @@
 										}
 									]
 								}
-							],
-							"ms_comment_ranges": {
-								"480b5ada-291f-43aa-919c-defe3b4f1649": {
-									"text": "spark.conf.set(\"esp_date\", esp_date)  ",
-									"start": {
-										"line": 7,
-										"column": 5
-									},
-									"end": {
-										"line": 7,
-										"column": 43
-									}
-								}
-							}
+							]
 						},
 						"source": [
-							"%%pyspark\r\n",
+							"#try:\r\n",
+							"#    spark.read.parquet(f\"{path_base}/raw/sales/batch_dt={esp_date}*/*.parquet\").createOrReplaceTempView('ref_raw_sales')\r\n",
+							"#except:\r\n",
+							"#    mssparkutils.notebook.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
 							"\r\n",
-							"def read_raw_table():\r\n",
-							"\r\n",
-							"    print(esp_date)\r\n",
-							"\r\n",
-							"    spark.conf.set(\"esp_date\", esp_date)  \r\n",
-							"\r\n",
-							"    sys = mssparkutils.notebook\r\n",
-							"\r\n",
-							"    try:\r\n",
-							"        raw_sales_df = spark.read.parquet(f\"{base_path}/raw/sales/batch_dt={esp_date}/*.parquet\")\r\n",
-							"    except:\r\n",
-							"        sys.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
-							"\r\n",
-							"    raw_sales_df.createOrReplaceTempView('ref_raw_sales')\r\n",
-							"    raw_sales_df.show()"
+							"df = spark.read.parquet(f\"{path_base}/raw/sales/\").createOrReplaceTempView('ref_raw_sales')"
 						],
 						"outputs": [],
-						"execution_count": 6
+						"execution_count": 100
 					},
 					{
 						"cell_type": "markdown",
@@ -4042,7 +4395,7 @@
 							}
 						},
 						"source": [
-							"# Run a code"
+							"## Perform Transformations"
 						]
 					},
 					{
@@ -4056,14 +4409,80 @@
 								"transient": {
 									"deleting": false
 								}
-							}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
 						},
 						"source": [
-							"read_raw_table()\r\n",
+							"%%sql\r\n",
+							"\r\n",
+							"create or replace temporary view ref_stg_sales  AS\r\n",
+							"\r\n",
+							"select \r\n",
+							"       s.pos_transaction_id\r\n",
+							"     , p.sku_num\r\n",
+							"     , s.item_price as item_price_amt\r\n",
+							"     , s.item_qty \r\n",
+							"     , s.batch_dt as raw_batch_dt\r\n",
+							"     , CURRENT_TIMESTAMP as load_ts \r\n",
+							"     , to_date(s.transaction_dt,\"yyyyMMdd\") as transaction_date\r\n",
+							"  from ref_raw_sales s\r\n",
+							"  left join ref_raw_products p on s.product_id = p.product_id and s.batch_dt = p.batch_dt\r\n",
+							"  where s.batch_dt = ${esp_date} and p.batch_dt = ${esp_date}\r\n",
 							""
 						],
 						"outputs": [],
-						"execution_count": 7
+						"execution_count": 101
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Write to Target table"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"insert overwrite table adv_edw.sales_fct partition(transaction_date)\r\n",
+							"select pos_transaction_id\r\n",
+							"     , sku_num\r\n",
+							"     , item_price_amt\r\n",
+							"     , item_qty \r\n",
+							"     , raw_batch_dt\r\n",
+							"     , load_ts \r\n",
+							"     , transaction_date\r\n",
+							"  from ref_stg_sales\r\n",
+							"  ;\r\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 102
 					}
 				]
 			},
@@ -4094,7 +4513,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "fc2ccbf8-b8a4-4027-8fa9-6bd27e98664c"
+						"spark.autotune.trackingId": "96434fed-cd97-4a08-b16f-9c52d5e464e4"
 					}
 				},
 				"metadata": {
@@ -4154,95 +4573,6 @@
 							"  current_record_ind int\r\n",
 							"\r\n",
 							")\r\n",
-							"USING DELTA\r\n",
-							""
-						],
-						"outputs": [],
-						"execution_count": 3
-					}
-				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/nb_recreate_sales_fct')]",
-			"type": "Microsoft.Synapse/workspaces/notebooks",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"folder": {
-					"name": "adv/dll"
-				},
-				"nbformat": 4,
-				"nbformat_minor": 2,
-				"bigDataPool": {
-					"referenceName": "coursepool",
-					"type": "BigDataPoolReference"
-				},
-				"sessionProperties": {
-					"driverMemory": "28g",
-					"driverCores": 4,
-					"executorMemory": "28g",
-					"executorCores": 4,
-					"numExecutors": 2,
-					"runAsWorkspaceSystemIdentity": false,
-					"conf": {
-						"spark.dynamicAllocation.enabled": "false",
-						"spark.dynamicAllocation.minExecutors": "2",
-						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "bb13af4a-3b80-4ab7-b7d7-6a4a8bc70317"
-					}
-				},
-				"metadata": {
-					"saveOutput": true,
-					"enableDebugMode": false,
-					"kernelspec": {
-						"name": "synapse_pyspark",
-						"display_name": "Synapse PySpark"
-					},
-					"language_info": {
-						"name": "python"
-					},
-					"a365ComputeOptions": {
-						"id": "/subscriptions/e8466fdf-9bf5-4a95-b888-76e57bd31ac5/resourceGroups/synapse-course-rg/providers/Microsoft.Synapse/workspaces/synapse-course-isws/bigDataPools/coursepool",
-						"name": "coursepool",
-						"type": "Spark",
-						"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
-						"auth": {
-							"type": "AAD",
-							"authResource": "https://dev.azuresynapse.net"
-						},
-						"sparkVersion": "3.3",
-						"nodeCount": 3,
-						"cores": 4,
-						"memory": 28
-					},
-					"sessionKeepAliveTimeout": 5
-				},
-				"cells": [
-					{
-						"cell_type": "code",
-						"metadata": {
-							"microsoft": {
-								"language": "sparksql"
-							},
-							"collapsed": false
-						},
-						"source": [
-							"%%sql\r\n",
-							"\r\n",
-							"USE adv_edw;\r\n",
-							"\r\n",
-							"DROP table if exists sales_fct;\r\n",
-							"\r\n",
-							"CREATE TABLE IF NOT EXISTS sales_fct (\r\n",
-							"\tpos_transaction_id int,\r\n",
-							"\tsku_num varchar(100),\r\n",
-							"\titem_price_amt decimal(8,2),\r\n",
-							"\titem_qty int,\r\n",
-							"\traw_batch_dt int,\r\n",
-							"\tload_ts timestamp,\r\n",
-							"    transaction_date date\r\n",
-							"\t)\r\n",
 							"USING DELTA\r\n",
 							""
 						],
