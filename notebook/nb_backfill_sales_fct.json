@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "d0b33c69-959c-4708-8b9c-a47be492bcda"
+				"spark.autotune.trackingId": "15839e23-396b-4325-8922-c97e7217aab9"
 			}
 		},
 		"metadata": {
@@ -92,7 +92,7 @@
 					"PARTITIONED BY (transaction_date)\r\n",
 					""
 				],
-				"execution_count": 45
+				"execution_count": 68
 			},
 			{
 				"cell_type": "markdown",
@@ -125,10 +125,10 @@
 				},
 				"source": [
 					"batch_start_date = \"20170711\"\r\n",
-					"batch_end_date = \"20170712\"\r\n",
+					"batch_end_date = \"20170715\"\r\n",
 					"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 63
+				"execution_count": 69
 			},
 			{
 				"cell_type": "markdown",
@@ -175,9 +175,9 @@
 					"df.filter(f\"batch_dt between {batch_start_date} AND {batch_end_date} \") \r\n",
 					"df.createOrReplaceTempView('ref_raw_products')\r\n",
 					"\r\n",
-					"display(df.limit(10))"
+					"#display(df.limit(5))"
 				],
-				"execution_count": 64
+				"execution_count": 70
 			},
 			{
 				"cell_type": "markdown",
@@ -229,9 +229,22 @@
 					"raw_df = spark.sql(sql)\r\n",
 					"raw_df.createOrReplaceTempView('ref_stg_sales')\r\n",
 					"\r\n",
-					"raw_df.show(10)"
+					"raw_df.show(5)"
 				],
-				"execution_count": 65
+				"execution_count": 71
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Write to target table"
+				]
 			},
 			{
 				"cell_type": "code",
@@ -267,7 +280,7 @@
 					"  ;\r\n",
 					""
 				],
-				"execution_count": 67
+				"execution_count": 72
 			}
 		]
 	}
