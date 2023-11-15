@@ -1,0 +1,57 @@
+{
+	"name": "pl_init_load_sales_fct",
+	"properties": {
+		"activities": [
+			{
+				"name": "nb_backfill_sales_fct",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": "nb_backfill_sales_fct",
+						"type": "NotebookReference"
+					},
+					"parameters": {
+						"batch_start_date": {
+							"value": {
+								"value": "@pipeline().parameters.start_date",
+								"type": "Expression"
+							},
+							"type": "int"
+						},
+						"batch_end_date": {
+							"value": {
+								"value": "@pipeline().parameters.end_date",
+								"type": "Expression"
+							},
+							"type": "int"
+						}
+					},
+					"snapshot": true
+				}
+			}
+		],
+		"parameters": {
+			"start_date": {
+				"type": "int",
+				"defaultValue": 20170711
+			},
+			"end_date": {
+				"type": "int",
+				"defaultValue": 20170715
+			}
+		},
+		"folder": {
+			"name": "adv/edw/sales_fct"
+		},
+		"annotations": []
+	}
+}
