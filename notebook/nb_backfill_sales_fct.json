@@ -6,6 +6,10 @@
 		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "coursepool",
+			"type": "BigDataPoolReference"
+		},
 		"sessionProperties": {
 			"driverMemory": "28g",
 			"driverCores": 4,
@@ -16,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "9bb776a3-aaa4-4ed9-8029-5a060a636162"
+				"spark.autotune.trackingId": "9e6743aa-0299-4603-84a1-b5543d4cebcc"
 			}
 		},
 		"metadata": {
@@ -24,17 +28,256 @@
 			"enableDebugMode": false,
 			"kernelspec": {
 				"name": "synapse_pyspark",
-				"display_name": "python"
+				"display_name": "Synapse PySpark"
 			},
 			"language_info": {
 				"name": "python"
 			},
-			"sessionKeepAliveTimeout": 30
+			"a365ComputeOptions": {
+				"id": "/subscriptions/e8466fdf-9bf5-4a95-b888-76e57bd31ac5/resourceGroups/synapse-course-rg/providers/Microsoft.Synapse/workspaces/synapse-course-isws/bigDataPools/coursepool",
+				"name": "coursepool",
+				"type": "Spark",
+				"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.3",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 5
 		},
 		"cells": [
 			{
-				"cell_type": "code",
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
 				"source": [
+					"## Recreate Target table "
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE adv_edw;\r\n",
+					"\r\n",
+					"DROP table if exists sales_fct;\r\n",
+					"\r\n",
+					"CREATE TABLE IF NOT EXISTS sales_fct (\r\n",
+					"\tpos_transaction_id int,\r\n",
+					"\tsku_num varchar(100),\r\n",
+					"\titem_price_amt decimal(8,2),\r\n",
+					"\titem_qty int,\r\n",
+					"\traw_batch_dt int,\r\n",
+					"\tload_ts timestamp,\r\n",
+					"    transaction_date date\r\n",
+					"\t)\r\n",
+					"USING DELTA\r\n",
+					"PARTITIONED BY (transaction_date)\r\n",
+					""
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Init parameters"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"tags": [
+						"parameters"
+					]
+				},
+				"source": [
+					"batch_start_date = \"20170711\"\r\n",
+					"batch_end_date = \"20170715\"\r\n",
+					"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Read source tables"
+				]
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Read Products RAW table"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"df = spark.read.parquet(f\"{path_base}/raw/products/\")\r\n",
+					"df.filter(f\"batch_dt between {batch_start_date} AND {batch_end_date} \") \r\n",
+					"df.createOrReplaceTempView('ref_raw_products')\r\n",
+					"\r\n",
+					"#display(df.limit(5))"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Read Sales RAW table"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"\r\n",
+					"#path_raw_sales = f'{path_base}/raw/sales/'\r\n",
+					"#spark.read.option(\"basePath\", path_raw_sales).parquet(f\"{path_raw_sales}/batch_dt=*/*.parquet\").createOrReplaceTempView('ref_raw')\r\n",
+					"\r\n",
+					"spark.read.parquet(f'{path_base}/raw/sales/').createOrReplaceTempView('ref_raw_sales')\r\n",
+					" \r\n",
+					"sql = f\"\"\"\r\n",
+					"select \r\n",
+					"       s.pos_transaction_id\r\n",
+					"     , p.sku_num\r\n",
+					"     , s.item_price as item_price_amt\r\n",
+					"     , s.item_qty \r\n",
+					"     , s.batch_dt as raw_batch_dt\r\n",
+					"     , CURRENT_TIMESTAMP as load_ts \r\n",
+					"     , to_date(s.transaction_dt,\"yyyyMMdd\") as transaction_date\r\n",
+					"  from ref_raw_sales s\r\n",
+					"  left join ref_raw_products p on s.product_id = p.product_id and s.batch_dt = p.batch_dt\r\n",
+					" where s.batch_dt between {batch_start_date} AND {batch_end_date}\r\n",
+					"\"\"\"\r\n",
+					"raw_df = spark.sql(sql)\r\n",
+					"raw_df.createOrReplaceTempView('ref_stg_sales')\r\n",
+					"\r\n",
+					"raw_df.show(5)"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Write to target table"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"SET spark.sql.sources.partitionOverwriteMode=dynamic;\r\n",
+					"\r\n",
+					"insert overwrite table sales_fct partition(transaction_date)\r\n",
+					"select pos_transaction_id\r\n",
+					"     , sku_num\r\n",
+					"     , item_price_amt\r\n",
+					"     , item_qty \r\n",
+					"     , raw_batch_dt\r\n",
+					"     , load_ts \r\n",
+					"     , transaction_date\r\n",
+					"  from ref_stg_sales\r\n",
+					"  ;\r\n",
 					""
 				],
 				"execution_count": null

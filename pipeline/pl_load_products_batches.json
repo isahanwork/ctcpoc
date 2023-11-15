@@ -23,7 +23,7 @@
 						{
 							"type": "Query",
 							"text": {
-								"value": "select date_id as esp_dt\n  from bronze.vw_calendar\n where date_id between  @{pipeline().parameters.dt_satart}\n   and  @{pipeline().parameters.dt_end}",
+								"value": "select top(@{pipeline().parameters.days}) date_id as esp_dt\n  from bronze.vw_calendar\n where date_id >=  @{pipeline().parameters.dt_satart}\n order by date_id   ",
 								"type": "Expression"
 							}
 						}
@@ -123,11 +123,11 @@
 		"parameters": {
 			"dt_satart": {
 				"type": "string",
-				"defaultValue": "20170710"
+				"defaultValue": "20170711"
 			},
-			"dt_end": {
-				"type": "string",
-				"defaultValue": "20200615"
+			"days": {
+				"type": "int",
+				"defaultValue": 1
 			}
 		},
 		"folder": {
