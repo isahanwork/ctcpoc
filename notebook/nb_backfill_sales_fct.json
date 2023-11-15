@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "15839e23-396b-4325-8922-c97e7217aab9"
+				"spark.autotune.trackingId": "9e6743aa-0299-4603-84a1-b5543d4cebcc"
 			}
 		},
 		"metadata": {
@@ -48,7 +48,7 @@
 				"memory": 28,
 				"automaticScaleJobs": false
 			},
-			"sessionKeepAliveTimeout": 15
+			"sessionKeepAliveTimeout": 5
 		},
 		"cells": [
 			{
@@ -92,7 +92,7 @@
 					"PARTITIONED BY (transaction_date)\r\n",
 					""
 				],
-				"execution_count": 68
+				"execution_count": null
 			},
 			{
 				"cell_type": "markdown",
@@ -128,7 +128,7 @@
 					"batch_end_date = \"20170715\"\r\n",
 					"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 69
+				"execution_count": null
 			},
 			{
 				"cell_type": "markdown",
@@ -177,7 +177,7 @@
 					"\r\n",
 					"#display(df.limit(5))"
 				],
-				"execution_count": 70
+				"execution_count": null
 			},
 			{
 				"cell_type": "markdown",
@@ -231,7 +231,7 @@
 					"\r\n",
 					"raw_df.show(5)"
 				],
-				"execution_count": 71
+				"execution_count": null
 			},
 			{
 				"cell_type": "markdown",
@@ -280,7 +280,7 @@
 					"  ;\r\n",
 					""
 				],
-				"execution_count": 72
+				"execution_count": null
 			}
 		]
 	}

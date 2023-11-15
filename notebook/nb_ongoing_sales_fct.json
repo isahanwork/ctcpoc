@@ -22,7 +22,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "edf8eceb-a4f2-4fd6-b32d-356e76eeaabb"
+				"spark.autotune.trackingId": "14e58a38-1648-4b07-95e0-ee96d9ec0ba1"
 			}
 		},
 		"metadata": {
@@ -74,10 +74,10 @@
 					]
 				},
 				"source": [
-					"esp_date = \"20170712\"\r\n",
+					"esp_date = \"20170716\"\r\n",
 					"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 80
+				"execution_count": 97
 			},
 			{
 				"cell_type": "code",
@@ -103,10 +103,9 @@
 					"\r\n",
 					"%%pyspark\r\n",
 					"print(esp_date)\r\n",
-					"spark.conf.set(\"esp_date\", esp_date)  \r\n",
-					""
+					"spark.conf.set(\"esp_date\", esp_date)"
 				],
-				"execution_count": 90
+				"execution_count": 104
 			},
 			{
 				"cell_type": "markdown",
@@ -149,10 +148,9 @@
 				},
 				"source": [
 					"#spark.read.parquet(f\"{path_base}/raw/products/batch_dt={esp_date}*/*.parquet\").createOrReplaceTempView('ref_raw_products')\r\n",
-					"df = spark.read.parquet(f\"{path_base}/raw/products/\").createOrReplaceTempView('ref_raw_products')\r\n",
-					""
+					"df = spark.read.parquet(f\"{path_base}/raw/products/\").createOrReplaceTempView('ref_raw_products')"
 				],
-				"execution_count": 81
+				"execution_count": 99
 			},
 			{
 				"cell_type": "markdown",
@@ -241,11 +239,9 @@
 					"#except:\r\n",
 					"#    mssparkutils.notebook.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
 					"\r\n",
-					"df = spark.read.parquet(f\"{path_base}/raw/sales/\").createOrReplaceTempView('ref_raw_sales')\r\n",
-					"\r\n",
-					""
+					"df = spark.read.parquet(f\"{path_base}/raw/sales/\").createOrReplaceTempView('ref_raw_sales')"
 				],
-				"execution_count": 82
+				"execution_count": 100
 			},
 			{
 				"cell_type": "markdown",
@@ -295,7 +291,7 @@
 					"  where s.batch_dt = ${esp_date} and p.batch_dt = ${esp_date}\r\n",
 					""
 				],
-				"execution_count": 93
+				"execution_count": 101
 			},
 			{
 				"cell_type": "markdown",
@@ -342,7 +338,7 @@
 					"  ;\r\n",
 					""
 				],
-				"execution_count": 86
+				"execution_count": 102
 			}
 		]
 	}
