@@ -1,10 +1,6 @@
 {
-	"name": "nb_ongoing_sales_fct",
+	"name": "nb_ongoing_sales_fct_d41338c3-3b21-4e1d-b452-431236f21026",
 	"properties": {
-		"description": "ongoing script for Sales_fct and Sales_Item_fct tables",
-		"folder": {
-			"name": "adv/pySpark/sales_fct"
-		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
@@ -22,7 +18,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "b5d76cbd-1ba2-4245-9730-d7aa9cf4969c"
+				"spark.autotune.trackingId": "a7abd076-23c9-4979-a209-83a50e64ebf0"
 			}
 		},
 		"metadata": {
@@ -50,18 +46,11 @@
 				"memory": 28,
 				"automaticScaleJobs": false
 			},
-			"sessionKeepAliveTimeout": 15
+			"sessionKeepAliveTimeout": 30
 		},
 		"cells": [
 			{
 				"cell_type": "markdown",
-				"metadata": {
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
 				"source": [
 					"## Init input parameters"
 				]
@@ -74,23 +63,28 @@
 					]
 				},
 				"source": [
-					"esp_date = \"20170721\"\r\n",
+					"esp_date = \"20170720\"\r\n",
 					"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 27
+				"execution_count": 4
 			},
 			{
 				"cell_type": "code",
 				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					},
+					"tags": [
+						"parameters_overwritten"
+					]
+				},
+				"source": [
+					"# This cell is generated from runtime parameters. Learn more: https://go.microsoft.com/fwlink/?linkid=2161015\n",
+					"esp_date = 20170723\n",
+					""
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
 					"microsoft": {
 						"language": "sparksql"
 					},
@@ -105,134 +99,36 @@
 					"\r\n",
 					"spark.conf.set(\"esp_date\", esp_date)"
 				],
-				"execution_count": 28
+				"execution_count": 6
 			},
 			{
 				"cell_type": "markdown",
-				"metadata": {
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
 				"source": [
 					"## Read Source tables"
 				]
 			},
 			{
 				"cell_type": "markdown",
-				"metadata": {
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
 				"source": [
 					"### Read Products RAW table"
 				]
 			},
 			{
 				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
 				"source": [
 					"#spark.read.parquet(f\"{path_base}/raw/products/batch_dt={esp_date}*/*.parquet\").createOrReplaceTempView('ref_raw_products')\r\n",
 					"df = spark.read.parquet(f\"{path_base}/raw/products/\").createOrReplaceTempView('ref_raw_products')"
 				],
-				"execution_count": 29
+				"execution_count": 7
 			},
 			{
 				"cell_type": "markdown",
-				"metadata": {
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
 				"source": [
 					"### Read Sales RAW table"
 				]
 			},
 			{
 				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					},
-					"ms_comments": [
-						{
-							"threadId": "480b5ada-291f-43aa-919c-defe3b4f1649",
-							"text": "need fix this",
-							"status": "active",
-							"user": {
-								"name": "Ihor Sahan",
-								"idType": "aad"
-							},
-							"createdDateUTC": 1699993686445,
-							"modifiedDateUTC": 1699993686445,
-							"replies": [
-								{
-									"replyId": "a440669c-bf17-45eb-a44b-5b9d3b5d23e2",
-									"text": "Iryna please take a look",
-									"user": {
-										"name": "Ihor Sahan",
-										"idType": "aad"
-									},
-									"createdDateUTC": 1699993802791,
-									"modifiedDateUTC": 1699993802791
-								},
-								{
-									"replyId": "fbbfcf29-832a-499e-b6a1-d077b950a98c",
-									"text": "trtrty",
-									"user": {
-										"name": "Ihor Sahan",
-										"idType": "aad"
-									},
-									"createdDateUTC": 1699993825844,
-									"modifiedDateUTC": 1699993825844
-								},
-								{
-									"replyId": "77c8a860-5356-46ab-8372-031c6df348fe",
-									"text": "dfghdfgh",
-									"user": {
-										"name": "Ihor Sahan",
-										"idType": "aad"
-									},
-									"createdDateUTC": 1699993828425,
-									"modifiedDateUTC": 1699993828425
-								},
-								{
-									"replyId": "c146aec8-f3c5-49da-8afb-3e08c1c3e1c4",
-									"text": "fgh",
-									"user": {
-										"name": "Ihor Sahan",
-										"idType": "aad"
-									},
-									"createdDateUTC": 1699993832799,
-									"modifiedDateUTC": 1699993832799
-								}
-							]
-						}
-					]
-				},
 				"source": [
 					"#try:\r\n",
 					"#    spark.read.parquet(f\"{path_base}/raw/sales/batch_dt={esp_date}*/*.parquet\").createOrReplaceTempView('ref_raw_sales')\r\n",
@@ -241,17 +137,10 @@
 					"\r\n",
 					"df = spark.read.parquet(f\"{path_base}/raw/sales/\").createOrReplaceTempView('ref_raw_sales')"
 				],
-				"execution_count": 30
+				"execution_count": 8
 			},
 			{
 				"cell_type": "markdown",
-				"metadata": {
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
 				"source": [
 					"## Perform Transformations"
 				]
@@ -259,15 +148,6 @@
 			{
 				"cell_type": "code",
 				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					},
 					"microsoft": {
 						"language": "sparksql"
 					},
@@ -277,7 +157,6 @@
 					"%%sql\r\n",
 					"\r\n",
 					"create or replace temporary view ref_stg_sales  AS\r\n",
-					"\r\n",
 					"select \r\n",
 					"       s.pos_transaction_id\r\n",
 					"     , p.sku_num\r\n",
@@ -287,21 +166,13 @@
 					"     , CURRENT_TIMESTAMP as load_ts \r\n",
 					"     , to_date(s.transaction_dt,\"yyyyMMdd\") as transaction_date\r\n",
 					"  from ref_raw_sales s\r\n",
-					"  left outer join ref_raw_products p on s.product_id = p.product_id and s.batch_dt = p.batch_dt and p.batch_dt = ${esp_date}\r\n",
-					"  where s.batch_dt = ${esp_date}\r\n",
-					""
+					"  left outer join ref_raw_products p on s.product_id = p.product_id and s.batch_dt = p.batch_dt and p.batch_dt = '${esp_date}'\r\n",
+					"  where s.batch_dt = '${esp_date}' "
 				],
-				"execution_count": 31
+				"execution_count": 25
 			},
 			{
 				"cell_type": "markdown",
-				"metadata": {
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
 				"source": [
 					"## Write to Target table"
 				]
@@ -309,15 +180,6 @@
 			{
 				"cell_type": "code",
 				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					},
 					"microsoft": {
 						"language": "sparksql"
 					},
@@ -338,7 +200,7 @@
 					"  ;\r\n",
 					""
 				],
-				"execution_count": 32
+				"execution_count": 26
 			}
 		]
 	}
