@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "0e9b21dd-93c4-42a9-8df0-1edf868cdacf"
+				"spark.autotune.trackingId": "8a312294-bbb3-4f19-b5d1-8953cb30f61b"
 			}
 		},
 		"metadata": {
@@ -128,8 +128,8 @@
 					"collapsed": false
 				},
 				"source": [
-					"\r\n",
 					"%%sql\r\n",
+					"\r\n",
 					"-- Merge statement to handle upsert of RAW dataset into TRG table\r\n",
 					"MERGE INTO adv_edw.product_dim t\r\n",
 					"USING (\r\n",
@@ -167,12 +167,7 @@
 					"  INSERT (sku_num, effective_date, end_date, product_nm, category_nm, sub_category_nm, \r\n",
 					"          item_price_amt, standard_cost_amt, color_nm, load_ts, raw_batch_dt, current_record_ind) \r\n",
 					"  VALUES (s.sku_num, to_date('${esp_date}',\"yyyyMMdd\"), '9999-12-31', s.product_nm, s.category_nm, s.sub_category_nm, \r\n",
-					"          s.item_price_amt, s.standard_cost_amt, s.color_nm, s.load_ts, s.raw_batch_dt, 1)\r\n",
-					";\r\n",
-					"\r\n",
-					"--Vacuum files where table version is older than 7 days \r\n",
-					"VACUUM adv_edw.product_dim RETAIN 168 HOURS;\r\n",
-					""
+					"          s.item_price_amt, s.standard_cost_amt, s.color_nm, s.load_ts, s.raw_batch_dt, 1)"
 				],
 				"execution_count": 73
 			},
@@ -219,11 +214,16 @@
 				},
 				"source": [
 					"%%sql\r\n",
+					"\r\n",
 					"use adv_edw;\r\n",
+					"\r\n",
+					"--Vacuum files where table version is older than 7 days \r\n",
+					"VACUUM product_dim RETAIN 168 HOURS;\r\n",
+					"\r\n",
 					"-- Retrieve the version/change history of the Delta table\r\n",
 					"DESCRIBE HISTORY product_dim;"
 				],
-				"execution_count": 78
+				"execution_count": 79
 			}
 		]
 	}
