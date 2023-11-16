@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "f927e27b-009a-4ccf-8fe1-748ae00334e3"
+				"spark.autotune.trackingId": "8a312294-bbb3-4f19-b5d1-8953cb30f61b"
 			}
 		},
 		"metadata": {
@@ -60,10 +60,10 @@
 					]
 				},
 				"source": [
-					"esp_date = \"\"\r\n",
+					"esp_date = \"20170718\"\r\n",
 					"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 6
+				"execution_count": 71
 			},
 			{
 				"cell_type": "code",
@@ -84,20 +84,12 @@
 				"source": [
 					"%%pyspark\r\n",
 					"\r\n",
-					"print(esp_date)\r\n",
-					"\r\n",
 					"spark.conf.set(\"esp_date\", esp_date)  \r\n",
 					"\r\n",
-					"sys = mssparkutils.notebook\r\n",
-					"\r\n",
-					"raw_folder_path = f'{base_path}/raw'\r\n",
-					"\r\n",
 					"try:\r\n",
-					"    raw_df = spark.read.parquet(f\"{raw_folder_path}/products/batch_dt={esp_date}/*.parquet\")\r\n",
+					"    spark.read.parquet(f\"{base_path}/raw/products/batch_dt={esp_date}/*.parquet\").createOrReplaceTempView('ref_product_raw')\r\n",
 					"except:\r\n",
-					"    sys.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
-					"\r\n",
-					"raw_df.createOrReplaceTempView('ref_product_raw')\r\n",
+					"    mssparkutils.notebook.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
 					"\r\n",
 					"sql = f\"\"\"\r\n",
 					"select \r\n",
@@ -109,7 +101,6 @@
 					"        select *\r\n",
 					"            , row_number()  OVER (PARTITION BY sku_num ORDER BY batch_dt desc) AS last_value\r\n",
 					"        from ref_product_raw\r\n",
-					"       -- where batch_dt={esp_date}\r\n",
 					"      )\r\n",
 					"where last_value = 1\r\n",
 					"\"\"\"\r\n",
@@ -117,32 +108,7 @@
 					"raw_df.createOrReplaceTempView('ref_product_raw')\r\n",
 					"#raw_df.show(50)"
 				],
-				"execution_count": 23
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					},
-					"microsoft": {
-						"language": "python"
-					}
-				},
-				"source": [
-					"%%pyspark\r\n",
-					"\r\n",
-					"trg_df = spark.sql(\"select * from adv_edw.product_dim\")\r\n",
-					"trg_df.createOrReplaceTempView('ref_product_trg')\r\n",
-					"#trg_df.show(50)"
-				],
-				"execution_count": null
+				"execution_count": 72
 			},
 			{
 				"cell_type": "code",
@@ -162,8 +128,8 @@
 					"collapsed": false
 				},
 				"source": [
-					"\r\n",
 					"%%sql\r\n",
+					"\r\n",
 					"-- Merge statement to handle upsert of RAW dataset into TRG table\r\n",
 					"MERGE INTO adv_edw.product_dim t\r\n",
 					"USING (\r\n",
@@ -180,7 +146,7 @@
 					"         , raw.item_price_amt, raw.standard_cost_amt, raw.color_nm\r\n",
 					"         , raw.load_ts, raw.raw_batch_dt\r\n",
 					"    FROM ref_product_raw AS raw\r\n",
-					"    JOIN ref_product_trg AS trg ON trg.sku_num = raw.sku_num\r\n",
+					"    JOIN adv_edw.product_dim AS trg ON trg.sku_num = raw.sku_num\r\n",
 					"    WHERE trg.current_record_ind = 1 \r\n",
 					"      AND ( trg.product_nm <> raw.product_nm\r\n",
 					"         or trg.item_price_amt <> raw.item_price_amt\r\n",
@@ -203,7 +169,7 @@
 					"  VALUES (s.sku_num, to_date('${esp_date}',\"yyyyMMdd\"), '9999-12-31', s.product_nm, s.category_nm, s.sub_category_nm, \r\n",
 					"          s.item_price_amt, s.standard_cost_amt, s.color_nm, s.load_ts, s.raw_batch_dt, 1)"
 				],
-				"execution_count": null
+				"execution_count": 73
 			},
 			{
 				"cell_type": "code",
@@ -216,13 +182,10 @@
 						"transient": {
 							"deleting": false
 						}
-					},
-					"microsoft": {
-						"language": "python"
 					}
 				},
 				"source": [
-					"%%pyspark\r\n",
+					"%%script echo skipping\r\n",
 					"\r\n",
 					"(spark.read\r\n",
 					" .format(\"delta\").load(f\"{base_path}/edw/product_dim/\") #delta table folder to read from\r\n",
@@ -230,7 +193,7 @@
 					" .write.option(\"dataChange\", \"false\") #do not change the data\r\n",
 					" .format(\"delta\").mode(\"overwrite\").save(f\"{base_path}/edw/product_dim/\")) #location to write new file(s)"
 				],
-				"execution_count": 8
+				"execution_count": 61
 			},
 			{
 				"cell_type": "code",
@@ -252,13 +215,15 @@
 				"source": [
 					"%%sql\r\n",
 					"\r\n",
+					"use adv_edw;\r\n",
+					"\r\n",
 					"--Vacuum files where table version is older than 7 days \r\n",
-					"VACUUM adv_edw.product_dim RETAIN 168 HOURS;\r\n",
+					"VACUUM product_dim RETAIN 168 HOURS;\r\n",
 					"\r\n",
 					"-- Retrieve the version/change history of the Delta table\r\n",
-					"--DESCRIBE HISTORY avd_edw.products_dim;"
+					"DESCRIBE HISTORY product_dim;"
 				],
-				"execution_count": 14
+				"execution_count": 79
 			}
 		]
 	}

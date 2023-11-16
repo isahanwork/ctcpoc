@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "b577bec5-e3e1-4104-b3a0-09b51ff79d20"
+				"spark.autotune.trackingId": "41c1bdc5-f27f-43cf-a902-4783532a048a"
 			}
 		},
 		"metadata": {
@@ -80,7 +80,7 @@
 					"try:\r\n",
 					"    raw_df = spark.read.parquet(f\"{raw_folder_path}/calendar/*.parquet\")\r\n",
 					"except:\r\n",
-					"    sys.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
+					"    sys.exit(f\"cannot read calendar table\")  \r\n",
 					"\r\n",
 					"raw_df.createOrReplaceTempView('ref_raw')\r\n",
 					"\r\n",

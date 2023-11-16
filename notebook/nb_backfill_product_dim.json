@@ -1,0 +1,262 @@
+{
+	"name": "nb_backfill_product_dim",
+	"properties": {
+		"folder": {
+			"name": "adv/pySpark/product_dim"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "coursepool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "9224a5fd-2346-4234-b0cc-567b3e9d0494"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/e8466fdf-9bf5-4a95-b888-76e57bd31ac5/resourceGroups/synapse-course-rg/providers/Microsoft.Synapse/workspaces/synapse-course-isws/bigDataPools/coursepool",
+				"name": "coursepool",
+				"type": "Spark",
+				"endpoint": "https://synapse-course-isws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.3",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 5
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Recreate Target table"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE adv_edw;\r\n",
+					"\r\n",
+					"DROP table if exists product_dim;\r\n",
+					"\r\n",
+					"CREATE TABLE IF NOT EXISTS product_dim (\r\n",
+					"\tsku_num VARCHAR(100) not null,\r\n",
+					"    effective_date date,\r\n",
+					"    end_date date,\r\n",
+					"\tproduct_nm VARCHAR(200),\r\n",
+					"\tcategory_nm VARCHAR(100),\r\n",
+					"\tsub_category_nm VARCHAR(100),\r\n",
+					"\titem_price_amt decimal(8,2),\r\n",
+					"\tstandard_cost_amt decimal(8,2),\r\n",
+					"\tcolor_nm VARCHAR(100),\r\n",
+					"\tload_ts timestamp,\r\n",
+					"\traw_batch_dt int,\r\n",
+					"    current_record_ind int\r\n",
+					")\r\n",
+					"USING DELTA\r\n",
+					"PARTITIONED BY (current_record_ind)\r\n",
+					""
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Init parameters"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"tags": [
+						"parameters"
+					]
+				},
+				"source": [
+					"batch_start_date = \"20170711\"\r\n",
+					"batch_end_date = \"20170715\"\r\n",
+					"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Read source table"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"df = spark.read.parquet(f\"{path_base}/raw/products/\").createOrReplaceTempView('ref_raw_products')\r\n",
+					"spark.conf.set(\"batch_start_date\", batch_start_date)\r\n",
+					"spark.conf.set(\"batch_end_date\", batch_end_date)"
+				],
+				"execution_count": 9
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Write to target table"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"\r\n",
+					"%%sql\r\n",
+					"\r\n",
+					"insert overwrite table adv_edw.product_dim partition(current_record_ind)\r\n",
+					"select \r\n",
+					"       sku_num\r\n",
+					"     , to_date(${batch_end_date},\"yyyyMMdd\") as effective_date\r\n",
+					"     , '9999-12-31' as end_date\r\n",
+					"      , product_nm\r\n",
+					"      , category_nm\r\n",
+					"      , sub_category_nm\r\n",
+					"      , item_price_amt\r\n",
+					"      , standard_cost_amt\r\n",
+					"      , color_nm\r\n",
+					"      , CURRENT_TIMESTAMP as load_ts\r\n",
+					"      , batch_dt as raw_batch_dt\r\n",
+					"      , 1 as current_record_ind\r\n",
+					"  from (\r\n",
+					"        select *\r\n",
+					"            , row_number()  OVER (PARTITION BY sku_num ORDER BY batch_dt desc) AS last_value\r\n",
+					"        from ref_raw_products\r\n",
+					"       where batch_dt between ${batch_start_date} and ${batch_end_date} \r\n",
+					"      ) v\r\n",
+					"  where last_value = 1\r\n",
+					"  distribute by current_record_ind\r\n",
+					"        sort by sku_num"
+				],
+				"execution_count": 10
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"--Vacuum files where table version is older than 7 days \r\n",
+					"VACUUM adv_edw.product_dim RETAIN 168 HOURS;\r\n",
+					"\r\n",
+					"-- Retrieve the version/change history of the Delta table\r\n",
+					"--DESCRIBE HISTORY avd_edw.products_dim;"
+				],
+				"execution_count": 11
+			}
+		]
+	}
+}
