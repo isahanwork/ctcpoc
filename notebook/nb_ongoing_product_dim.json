@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "f29e849b-2cea-4cd1-9c45-7766a31fd55c"
+				"spark.autotune.trackingId": "c73686fd-94a5-406d-a76d-e82d4b3744a4"
 			}
 		},
 		"metadata": {
@@ -132,31 +132,6 @@
 						}
 					},
 					"microsoft": {
-						"language": "python"
-					}
-				},
-				"source": [
-					"%%pyspark\r\n",
-					"\r\n",
-					"trg_df = spark.sql(\"select * from adv_edw.product_dim\")\r\n",
-					"trg_df.createOrReplaceTempView('ref_product_trg')\r\n",
-					"#trg_df.show(50)"
-				],
-				"execution_count": 14
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					},
-					"microsoft": {
 						"language": "sparksql"
 					},
 					"collapsed": false
@@ -180,7 +155,7 @@
 					"         , raw.item_price_amt, raw.standard_cost_amt, raw.color_nm\r\n",
 					"         , raw.load_ts, raw.raw_batch_dt\r\n",
 					"    FROM ref_product_raw AS raw\r\n",
-					"    JOIN ref_product_trg AS trg ON trg.sku_num = raw.sku_num\r\n",
+					"    JOIN  adv_edw.product_dim AS trg ON trg.sku_num = raw.sku_num\r\n",
 					"    WHERE trg.current_record_ind = 1 \r\n",
 					"      AND ( trg.product_nm <> raw.product_nm\r\n",
 					"         or trg.item_price_amt <> raw.item_price_amt\r\n",
@@ -203,7 +178,34 @@
 					"  VALUES (s.sku_num, to_date('${esp_date}',\"yyyyMMdd\"), '9999-12-31', s.product_nm, s.category_nm, s.sub_category_nm, \r\n",
 					"          s.item_price_amt, s.standard_cost_amt, s.color_nm, s.load_ts, s.raw_batch_dt, 1)"
 				],
-				"execution_count": 19
+				"execution_count": 20
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "python"
+					}
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"\r\n",
+					"(spark.read\r\n",
+					" .format(\"delta\").load(f\"{base_path}/edw/product_dim/\") #delta table folder to read from\r\n",
+					" .repartition(1) #number of files to write\r\n",
+					" .write.option(\"dataChange\", \"false\") #do not change the data\r\n",
+					" .format(\"delta\").mode(\"overwrite\").save(f\"{base_path}/edw/product_dim/\")) #location to write new file(s)"
+				],
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
