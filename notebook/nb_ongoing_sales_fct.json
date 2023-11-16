@@ -22,7 +22,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "b5d76cbd-1ba2-4245-9730-d7aa9cf4969c"
+				"spark.autotune.trackingId": "083e945c-f2a8-449a-839d-840663500599"
 			}
 		},
 		"metadata": {
@@ -77,7 +77,7 @@
 					"esp_date = \"20170721\"\r\n",
 					"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 27
+				"execution_count": 33
 			},
 			{
 				"cell_type": "code",
