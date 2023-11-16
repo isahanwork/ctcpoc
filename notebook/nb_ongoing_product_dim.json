@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "c73686fd-94a5-406d-a76d-e82d4b3744a4"
+				"spark.autotune.trackingId": "7775fe7b-46dc-4bf9-80f8-04516c5290ee"
 			}
 		},
 		"metadata": {
@@ -60,10 +60,10 @@
 					]
 				},
 				"source": [
-					"esp_date = \"20170716\"\r\n",
+					"esp_date = \"20170718\"\r\n",
 					"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 12
+				"execution_count": 58
 			},
 			{
 				"cell_type": "code",
@@ -109,7 +109,6 @@
 					"        select *\r\n",
 					"            , row_number()  OVER (PARTITION BY sku_num ORDER BY batch_dt desc) AS last_value\r\n",
 					"        from ref_product_raw\r\n",
-					"       -- where batch_dt={esp_date}\r\n",
 					"      )\r\n",
 					"where last_value = 1\r\n",
 					"\"\"\"\r\n",
@@ -117,7 +116,7 @@
 					"raw_df.createOrReplaceTempView('ref_product_raw')\r\n",
 					"#raw_df.show(50)"
 				],
-				"execution_count": 13
+				"execution_count": 59
 			},
 			{
 				"cell_type": "code",
@@ -178,7 +177,7 @@
 					"  VALUES (s.sku_num, to_date('${esp_date}',\"yyyyMMdd\"), '9999-12-31', s.product_nm, s.category_nm, s.sub_category_nm, \r\n",
 					"          s.item_price_amt, s.standard_cost_amt, s.color_nm, s.load_ts, s.raw_batch_dt, 1)"
 				],
-				"execution_count": 20
+				"execution_count": 60
 			},
 			{
 				"cell_type": "code",
@@ -191,13 +190,10 @@
 						"transient": {
 							"deleting": false
 						}
-					},
-					"microsoft": {
-						"language": "python"
 					}
 				},
 				"source": [
-					"%%pyspark\r\n",
+					"%%script echo skipping\r\n",
 					"\r\n",
 					"(spark.read\r\n",
 					" .format(\"delta\").load(f\"{base_path}/edw/product_dim/\") #delta table folder to read from\r\n",
@@ -205,7 +201,7 @@
 					" .write.option(\"dataChange\", \"false\") #do not change the data\r\n",
 					" .format(\"delta\").mode(\"overwrite\").save(f\"{base_path}/edw/product_dim/\")) #location to write new file(s)"
 				],
-				"execution_count": null
+				"execution_count": 61
 			},
 			{
 				"cell_type": "code",
@@ -233,7 +229,7 @@
 					"-- Retrieve the version/change history of the Delta table\r\n",
 					"--DESCRIBE HISTORY avd_edw.products_dim;"
 				],
-				"execution_count": 17
+				"execution_count": 62
 			}
 		]
 	}

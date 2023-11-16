@@ -22,7 +22,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "a9c99e12-025a-43a5-94ed-0f632abe0e29"
+				"spark.autotune.trackingId": "eaa7b39e-979f-4efb-9ad5-2b1966f5f9e6"
 			}
 		},
 		"metadata": {
@@ -74,10 +74,10 @@
 					]
 				},
 				"source": [
-					"esp_date = \"20170716\"\r\n",
+					"esp_date = \"20170720\"\r\n",
 					"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 97
+				"execution_count": 40
 			},
 			{
 				"cell_type": "code",
@@ -102,10 +102,9 @@
 					"SET spark.sql.sources.partitionOverwriteMode=dynamic;\r\n",
 					"\r\n",
 					"%%pyspark\r\n",
-					"print(esp_date)\r\n",
 					"spark.conf.set(\"esp_date\", esp_date)"
 				],
-				"execution_count": 104
+				"execution_count": 41
 			},
 			{
 				"cell_type": "markdown",
@@ -150,7 +149,7 @@
 					"#spark.read.parquet(f\"{path_base}/raw/products/batch_dt={esp_date}*/*.parquet\").createOrReplaceTempView('ref_raw_products')\r\n",
 					"df = spark.read.parquet(f\"{path_base}/raw/products/\").createOrReplaceTempView('ref_raw_products')"
 				],
-				"execution_count": 99
+				"execution_count": 42
 			},
 			{
 				"cell_type": "markdown",
@@ -241,7 +240,7 @@
 					"\r\n",
 					"df = spark.read.parquet(f\"{path_base}/raw/sales/\").createOrReplaceTempView('ref_raw_sales')"
 				],
-				"execution_count": 100
+				"execution_count": 43
 			},
 			{
 				"cell_type": "markdown",
@@ -291,7 +290,7 @@
 					"  where s.batch_dt = ${esp_date} and p.batch_dt = ${esp_date}\r\n",
 					""
 				],
-				"execution_count": 101
+				"execution_count": 44
 			},
 			{
 				"cell_type": "markdown",
@@ -338,7 +337,7 @@
 					"  ;\r\n",
 					""
 				],
-				"execution_count": 102
+				"execution_count": 45
 			}
 		]
 	}
