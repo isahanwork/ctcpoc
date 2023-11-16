@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "e0cce5db-88ce-4cdb-9373-80c41c1222b3"
+				"spark.autotune.trackingId": "22a03a3f-12c4-4c09-8e00-b34189a56fe3"
 			}
 		},
 		"metadata": {
@@ -219,9 +219,9 @@
 					"VACUUM adv_edw.product_dim RETAIN 168 HOURS;\r\n",
 					"\r\n",
 					"-- Retrieve the version/change history of the Delta table\r\n",
-					"--DESCRIBE HISTORY avd_edw.products_dim;"
+					"DESCRIBE HISTORY avd_edw.products_dim;"
 				],
-				"execution_count": 62
+				"execution_count": 70
 			}
 		]
 	}
