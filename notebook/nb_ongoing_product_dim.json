@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "7775fe7b-46dc-4bf9-80f8-04516c5290ee"
+				"spark.autotune.trackingId": "e0cce5db-88ce-4cdb-9373-80c41c1222b3"
 			}
 		},
 		"metadata": {
@@ -84,20 +84,12 @@
 				"source": [
 					"%%pyspark\r\n",
 					"\r\n",
-					"print(esp_date)\r\n",
-					"\r\n",
 					"spark.conf.set(\"esp_date\", esp_date)  \r\n",
 					"\r\n",
-					"sys = mssparkutils.notebook\r\n",
-					"\r\n",
-					"raw_folder_path = f'{base_path}/raw'\r\n",
-					"\r\n",
 					"try:\r\n",
-					"    raw_df = spark.read.parquet(f\"{raw_folder_path}/products/batch_dt={esp_date}/*.parquet\")\r\n",
+					"    spark.read.parquet(f\"{base_path}/raw/products/batch_dt={esp_date}/*.parquet\").createOrReplaceTempView('ref_product_raw')\r\n",
 					"except:\r\n",
-					"    sys.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
-					"\r\n",
-					"raw_df.createOrReplaceTempView('ref_product_raw')\r\n",
+					"    mssparkutils.notebook.exit(f\"cannot load batch_dt={esp_date} file\")  \r\n",
 					"\r\n",
 					"sql = f\"\"\"\r\n",
 					"select \r\n",
@@ -154,7 +146,7 @@
 					"         , raw.item_price_amt, raw.standard_cost_amt, raw.color_nm\r\n",
 					"         , raw.load_ts, raw.raw_batch_dt\r\n",
 					"    FROM ref_product_raw AS raw\r\n",
-					"    JOIN  adv_edw.product_dim AS trg ON trg.sku_num = raw.sku_num\r\n",
+					"    JOIN adv_edw.product_dim AS trg ON trg.sku_num = raw.sku_num\r\n",
 					"    WHERE trg.current_record_ind = 1 \r\n",
 					"      AND ( trg.product_nm <> raw.product_nm\r\n",
 					"         or trg.item_price_amt <> raw.item_price_amt\r\n",
