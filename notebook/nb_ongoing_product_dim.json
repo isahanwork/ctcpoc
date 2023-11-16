@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "22a03a3f-12c4-4c09-8e00-b34189a56fe3"
+				"spark.autotune.trackingId": "0e9b21dd-93c4-42a9-8df0-1edf868cdacf"
 			}
 		},
 		"metadata": {
@@ -63,7 +63,7 @@
 					"esp_date = \"20170718\"\r\n",
 					"base_path = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 58
+				"execution_count": 71
 			},
 			{
 				"cell_type": "code",
@@ -108,7 +108,7 @@
 					"raw_df.createOrReplaceTempView('ref_product_raw')\r\n",
 					"#raw_df.show(50)"
 				],
-				"execution_count": 59
+				"execution_count": 72
 			},
 			{
 				"cell_type": "code",
@@ -167,9 +167,14 @@
 					"  INSERT (sku_num, effective_date, end_date, product_nm, category_nm, sub_category_nm, \r\n",
 					"          item_price_amt, standard_cost_amt, color_nm, load_ts, raw_batch_dt, current_record_ind) \r\n",
 					"  VALUES (s.sku_num, to_date('${esp_date}',\"yyyyMMdd\"), '9999-12-31', s.product_nm, s.category_nm, s.sub_category_nm, \r\n",
-					"          s.item_price_amt, s.standard_cost_amt, s.color_nm, s.load_ts, s.raw_batch_dt, 1)"
+					"          s.item_price_amt, s.standard_cost_amt, s.color_nm, s.load_ts, s.raw_batch_dt, 1)\r\n",
+					";\r\n",
+					"\r\n",
+					"--Vacuum files where table version is older than 7 days \r\n",
+					"VACUUM adv_edw.product_dim RETAIN 168 HOURS;\r\n",
+					""
 				],
-				"execution_count": 60
+				"execution_count": 73
 			},
 			{
 				"cell_type": "code",
@@ -214,14 +219,11 @@
 				},
 				"source": [
 					"%%sql\r\n",
-					"\r\n",
-					"--Vacuum files where table version is older than 7 days \r\n",
-					"VACUUM adv_edw.product_dim RETAIN 168 HOURS;\r\n",
-					"\r\n",
+					"use adv_edw;\r\n",
 					"-- Retrieve the version/change history of the Delta table\r\n",
-					"DESCRIBE HISTORY avd_edw.products_dim;"
+					"DESCRIBE HISTORY product_dim;"
 				],
-				"execution_count": 70
+				"execution_count": 78
 			}
 		]
 	}
