@@ -4,6 +4,7 @@
 		"activities": [
 			{
 				"name": "nb_backfill_sales_fct",
+				"description": "Added some short description to check how it looks like in PR",
 				"type": "SynapseNotebook",
 				"dependsOn": [],
 				"policy": {
@@ -35,7 +36,13 @@
 							"type": "int"
 						}
 					},
-					"snapshot": true
+					"snapshot": true,
+					"conf": {
+						"spark.dynamicAllocation.enabled": null,
+						"spark.dynamicAllocation.minExecutors": null,
+						"spark.dynamicAllocation.maxExecutors": null
+					},
+					"numExecutors": null
 				}
 			}
 		],

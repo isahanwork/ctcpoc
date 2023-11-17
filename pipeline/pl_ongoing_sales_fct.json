@@ -1,0 +1,101 @@
+{
+	"name": "pl_ongoing_sales_fct",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Dates",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_adv_raw",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "select top(@{pipeline().parameters.days}) date_id as esp_dt\n  from bronze.vw_calendar\n where date_id >=  @{pipeline().parameters.esp_date}\n order by date_id   ",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "ForEachDates",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Dates",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Dates').output.resultSets[0].Rows",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "nb_ongoing_sales_fct",
+							"type": "SynapseNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebook": {
+									"referenceName": "nb_ongoing_sales_fct",
+									"type": "NotebookReference"
+								},
+								"parameters": {
+									"esp_date": {
+										"value": "@{item().esp_dt}",
+										"type": "int"
+									}
+								},
+								"snapshot": true,
+								"conf": {
+									"spark.dynamicAllocation.enabled": false
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"esp_date": {
+				"type": "int",
+				"defaultValue": 20170711
+			},
+			"days": {
+				"type": "int",
+				"defaultValue": 1
+			}
+		},
+		"folder": {
+			"name": "adv/edw/sales_fct"
+		},
+		"annotations": []
+	}
+}

@@ -22,7 +22,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "eaa7b39e-979f-4efb-9ad5-2b1966f5f9e6"
+				"spark.autotune.trackingId": "083e945c-f2a8-449a-839d-840663500599"
 			}
 		},
 		"metadata": {
@@ -74,10 +74,10 @@
 					]
 				},
 				"source": [
-					"esp_date = \"20170720\"\r\n",
+					"esp_date = \"20170721\"\r\n",
 					"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 				],
-				"execution_count": 40
+				"execution_count": 33
 			},
 			{
 				"cell_type": "code",
@@ -102,9 +102,10 @@
 					"SET spark.sql.sources.partitionOverwriteMode=dynamic;\r\n",
 					"\r\n",
 					"%%pyspark\r\n",
+					"\r\n",
 					"spark.conf.set(\"esp_date\", esp_date)"
 				],
-				"execution_count": 41
+				"execution_count": 28
 			},
 			{
 				"cell_type": "markdown",
@@ -149,7 +150,7 @@
 					"#spark.read.parquet(f\"{path_base}/raw/products/batch_dt={esp_date}*/*.parquet\").createOrReplaceTempView('ref_raw_products')\r\n",
 					"df = spark.read.parquet(f\"{path_base}/raw/products/\").createOrReplaceTempView('ref_raw_products')"
 				],
-				"execution_count": 42
+				"execution_count": 29
 			},
 			{
 				"cell_type": "markdown",
@@ -240,7 +241,7 @@
 					"\r\n",
 					"df = spark.read.parquet(f\"{path_base}/raw/sales/\").createOrReplaceTempView('ref_raw_sales')"
 				],
-				"execution_count": 43
+				"execution_count": 30
 			},
 			{
 				"cell_type": "markdown",
@@ -286,11 +287,11 @@
 					"     , CURRENT_TIMESTAMP as load_ts \r\n",
 					"     , to_date(s.transaction_dt,\"yyyyMMdd\") as transaction_date\r\n",
 					"  from ref_raw_sales s\r\n",
-					"  left join ref_raw_products p on s.product_id = p.product_id and s.batch_dt = p.batch_dt\r\n",
-					"  where s.batch_dt = ${esp_date} and p.batch_dt = ${esp_date}\r\n",
+					"  left outer join ref_raw_products p on s.product_id = p.product_id and s.batch_dt = p.batch_dt and p.batch_dt = ${esp_date}\r\n",
+					"  where s.batch_dt = ${esp_date}\r\n",
 					""
 				],
-				"execution_count": 44
+				"execution_count": 31
 			},
 			{
 				"cell_type": "markdown",
@@ -337,7 +338,7 @@
 					"  ;\r\n",
 					""
 				],
-				"execution_count": 45
+				"execution_count": 32
 			}
 		]
 	}

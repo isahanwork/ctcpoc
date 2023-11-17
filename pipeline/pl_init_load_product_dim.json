@@ -3,10 +3,8 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Recreate Product Dim Table",
+				"name": "Recreate Product Dim",
 				"type": "SynapseNotebook",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -21,6 +19,22 @@
 						"referenceName": "nb_recreate_product_dim",
 						"type": "NotebookReference"
 					},
+					"parameters": {
+						"batch_start_date": {
+							"value": {
+								"value": "@{pipeline().parameters.start_date}",
+								"type": "Expression"
+							},
+							"type": "int"
+						},
+						"batch_end_date": {
+							"value": {
+								"value": "@{pipeline().parameters.end_date}",
+								"type": "Expression"
+							},
+							"type": "int"
+						}
+					},
 					"snapshot": true,
 					"sparkPool": {
 						"referenceName": "coursepool",
@@ -32,83 +46,6 @@
 						"spark.dynamicAllocation.maxExecutors": 2
 					},
 					"numExecutors": 2
-				}
-			},
-			{
-				"name": "Get Dates",
-				"type": "Script",
-				"dependsOn": [
-					{
-						"activity": "Recreate Product Dim Table",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"linkedServiceName": {
-					"referenceName": "ls_adv_raw",
-					"type": "LinkedServiceReference"
-				},
-				"typeProperties": {
-					"scripts": [
-						{
-							"type": "Query",
-							"text": {
-								"value": "select date_id as esp_dt\n  from bronze.vw_calendar\n where date_id \n between @{pipeline().parameters.start_date}\n     and @{pipeline().parameters.end_date}\n order by date_id",
-								"type": "Expression"
-							}
-						}
-					],
-					"scriptBlockExecutionTimeout": "02:00:00"
-				}
-			},
-			{
-				"name": "ForEachDates",
-				"type": "ForEach",
-				"dependsOn": [
-					{
-						"activity": "Get Dates",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('Get Dates').output.resultSets[0].Rows",
-						"type": "Expression"
-					},
-					"isSequential": true,
-					"activities": [
-						{
-							"name": "Load Daily Batch Product Dim",
-							"type": "ExecutePipeline",
-							"dependsOn": [],
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "pl_daily_load_product_dim",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"esp_date": {
-										"value": "@item().esp_dt",
-										"type": "Expression"
-									}
-								}
-							}
-						}
-					]
 				}
 			}
 		],
