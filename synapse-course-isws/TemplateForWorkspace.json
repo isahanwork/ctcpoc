@@ -746,72 +746,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_daily_load_product_dim')]",
-			"type": "Microsoft.Synapse/workspaces/pipelines",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"activities": [
-					{
-						"name": "Run Daily Batch Product Dim",
-						"type": "SynapseNotebook",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebook": {
-								"referenceName": "nb_ongoing_product_dim",
-								"type": "NotebookReference"
-							},
-							"parameters": {
-								"esp_date": {
-									"value": {
-										"value": "@{pipeline().parameters.esp_date}",
-										"type": "Expression"
-									},
-									"type": "string"
-								}
-							},
-							"snapshot": true,
-							"sparkPool": {
-								"referenceName": "coursepool",
-								"type": "BigDataPoolReference"
-							},
-							"conf": {
-								"spark.dynamicAllocation.enabled": false,
-								"spark.dynamicAllocation.minExecutors": 2,
-								"spark.dynamicAllocation.maxExecutors": 2
-							},
-							"numExecutors": 2
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"esp_date": {
-						"type": "string",
-						"defaultValue": "99999999"
-					}
-				},
-				"folder": {
-					"name": "adv/edw/product_dim"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-11-06T12:34:04Z"
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/notebooks/nb_ongoing_product_dim')]",
-				"[concat(variables('workspaceId'), '/bigDataPools/coursepool')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/pl_execute_all_pipelines')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
@@ -917,10 +851,8 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Recreate Product Dim Table",
+						"name": "Recreate Product Dim",
 						"type": "SynapseNotebook",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -935,6 +867,22 @@
 								"referenceName": "nb_recreate_product_dim",
 								"type": "NotebookReference"
 							},
+							"parameters": {
+								"batch_start_date": {
+									"value": {
+										"value": "@{pipeline().parameters.start_date}",
+										"type": "Expression"
+									},
+									"type": "int"
+								},
+								"batch_end_date": {
+									"value": {
+										"value": "@{pipeline().parameters.end_date}",
+										"type": "Expression"
+									},
+									"type": "int"
+								}
+							},
 							"snapshot": true,
 							"sparkPool": {
 								"referenceName": "coursepool",
@@ -946,83 +894,6 @@
 								"spark.dynamicAllocation.maxExecutors": 2
 							},
 							"numExecutors": 2
-						}
-					},
-					{
-						"name": "Get Dates",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "Recreate Product Dim Table",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "ls_adv_raw",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "Query",
-									"text": {
-										"value": "select date_id as esp_dt\n  from bronze.vw_calendar\n where date_id \n between @{pipeline().parameters.start_date}\n     and @{pipeline().parameters.end_date}\n order by date_id",
-										"type": "Expression"
-									}
-								}
-							],
-							"scriptBlockExecutionTimeout": "02:00:00"
-						}
-					},
-					{
-						"name": "ForEachDates",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get Dates",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get Dates').output.resultSets[0].Rows",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "Load Daily Batch Product Dim",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "pl_daily_load_product_dim",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"esp_date": {
-												"value": "@item().esp_dt",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
 						}
 					}
 				],
@@ -1047,9 +918,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/notebooks/nb_recreate_product_dim')]",
-				"[concat(variables('workspaceId'), '/bigDataPools/coursepool')]",
-				"[concat(variables('workspaceId'), '/linkedServices/ls_adv_raw')]",
-				"[concat(variables('workspaceId'), '/pipelines/pl_daily_load_product_dim')]"
+				"[concat(variables('workspaceId'), '/bigDataPools/coursepool')]"
 			]
 		},
 		{
@@ -1060,6 +929,7 @@
 				"activities": [
 					{
 						"name": "nb_backfill_sales_fct",
+						"description": "Added some short description to check how it looks like in PR",
 						"type": "SynapseNotebook",
 						"dependsOn": [],
 						"policy": {
@@ -1417,6 +1287,185 @@
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/linkedServices/ls_adv_raw')]",
 				"[concat(variables('workspaceId'), '/datasets/ds_adv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_ongoing_product_dim')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Run Daily Batch Product Dim",
+						"type": "SynapseNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "nb_ongoing_product_dim",
+								"type": "NotebookReference"
+							},
+							"parameters": {
+								"esp_date": {
+									"value": {
+										"value": "@{pipeline().parameters.esp_date}",
+										"type": "Expression"
+									},
+									"type": "string"
+								}
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "coursepool",
+								"type": "BigDataPoolReference"
+							},
+							"conf": {
+								"spark.dynamicAllocation.enabled": false,
+								"spark.dynamicAllocation.minExecutors": 2,
+								"spark.dynamicAllocation.maxExecutors": 2
+							},
+							"numExecutors": 2
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"esp_date": {
+						"type": "string",
+						"defaultValue": "99999999"
+					}
+				},
+				"folder": {
+					"name": "adv/edw/product_dim"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-11-06T12:34:04Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/nb_ongoing_product_dim')]",
+				"[concat(variables('workspaceId'), '/bigDataPools/coursepool')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_ongoing_sales_fct')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Dates",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "ls_adv_raw",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": {
+										"value": "select top(@{pipeline().parameters.days}) date_id as esp_dt\n  from bronze.vw_calendar\n where date_id >=  @{pipeline().parameters.esp_date}\n order by date_id   ",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "ForEachDates",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Dates",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Dates').output.resultSets[0].Rows",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "nb_ongoing_sales_fct",
+									"type": "SynapseNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebook": {
+											"referenceName": "nb_ongoing_sales_fct",
+											"type": "NotebookReference"
+										},
+										"parameters": {
+											"esp_date": {
+												"value": {
+													"value": "@{item().esp_dt}",
+													"type": "Expression"
+												},
+												"type": "int"
+											}
+										},
+										"snapshot": true,
+										"conf": {
+											"spark.dynamicAllocation.enabled": false
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"esp_date": {
+						"type": "int",
+						"defaultValue": 20170711
+					},
+					"days": {
+						"type": "int",
+						"defaultValue": 1
+					}
+				},
+				"folder": {
+					"name": "adv/edw/sales_fct"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/ls_adv_raw')]",
+				"[concat(variables('workspaceId'), '/notebooks/nb_ongoing_sales_fct')]"
 			]
 		},
 		{
@@ -3331,6 +3380,9 @@
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
+				"folder": {
+					"name": "course"
+				},
 				"nbformat": 4,
 				"nbformat_minor": 2,
 				"bigDataPool": {
@@ -4393,7 +4445,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "eaa7b39e-979f-4efb-9ad5-2b1966f5f9e6"
+						"spark.autotune.trackingId": "d4fbd8f3-3c2e-4acd-b003-53ae174e0ea4"
 					}
 				},
 				"metadata": {
@@ -4418,7 +4470,8 @@
 						"sparkVersion": "3.3",
 						"nodeCount": 3,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 15
 				},
@@ -4444,11 +4497,11 @@
 							]
 						},
 						"source": [
-							"esp_date = \"20170720\"\r\n",
+							"esp_date = \"20170721\"\r\n",
 							"path_base = \"abfss://adventure-works@issynapsecoursedl.dfs.core.windows.net\""
 						],
 						"outputs": [],
-						"execution_count": 40
+						"execution_count": 33
 					},
 					{
 						"cell_type": "code",
@@ -4473,10 +4526,11 @@
 							"SET spark.sql.sources.partitionOverwriteMode=dynamic;\r\n",
 							"\r\n",
 							"%%pyspark\r\n",
+							"\r\n",
 							"spark.conf.set(\"esp_date\", esp_date)"
 						],
 						"outputs": [],
-						"execution_count": 41
+						"execution_count": 28
 					},
 					{
 						"cell_type": "markdown",
@@ -4522,7 +4576,7 @@
 							"df = spark.read.parquet(f\"{path_base}/raw/products/\").createOrReplaceTempView('ref_raw_products')"
 						],
 						"outputs": [],
-						"execution_count": 42
+						"execution_count": 29
 					},
 					{
 						"cell_type": "markdown",
@@ -4614,7 +4668,7 @@
 							"df = spark.read.parquet(f\"{path_base}/raw/sales/\").createOrReplaceTempView('ref_raw_sales')"
 						],
 						"outputs": [],
-						"execution_count": 43
+						"execution_count": 30
 					},
 					{
 						"cell_type": "markdown",
@@ -4660,12 +4714,12 @@
 							"     , CURRENT_TIMESTAMP as load_ts \r\n",
 							"     , to_date(s.transaction_dt,\"yyyyMMdd\") as transaction_date\r\n",
 							"  from ref_raw_sales s\r\n",
-							"  left join ref_raw_products p on s.product_id = p.product_id and s.batch_dt = p.batch_dt\r\n",
-							"  where s.batch_dt = ${esp_date} and p.batch_dt = ${esp_date}\r\n",
+							"  left outer join ref_raw_products p on s.product_id = p.product_id and s.batch_dt = p.batch_dt and p.batch_dt = ${esp_date}\r\n",
+							"  where s.batch_dt = ${esp_date}\r\n",
 							""
 						],
 						"outputs": [],
-						"execution_count": 44
+						"execution_count": 31
 					},
 					{
 						"cell_type": "markdown",
@@ -4713,7 +4767,7 @@
 							""
 						],
 						"outputs": [],
-						"execution_count": 45
+						"execution_count": 32
 					}
 				]
 			},
